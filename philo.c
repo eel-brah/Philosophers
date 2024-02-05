@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/04 04:20:26 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/05 03:35:55 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,12 @@ enum e_state
 	P_JOINED
 };
 
+typedef enum e_SIMstate
+{ 
+	ALL_ALIVE,
+	SMO_DEAD,
+} t_SIMstate;
+
 typedef struct s_rotine
 {
 	int	tdie;
@@ -94,13 +100,17 @@ typedef struct s_rotine
 
 typedef struct s_philo
 {
-	pthread_t		pid;
-	int				pnum;
+	pthread_t		id;
+	int				num;
 	t_rotine		rotine;
-	enum e_state	state;
+	t_SIMstate		*state;
 	pthread_mutex_t lfork;
 	pthread_mutex_t *rfork;
-	size_t			start;
+	size_t			SIMstart;
+	size_t			last_meal;
+	char			eating;
+	pthread_mutex_t *dead_check;
+	char			done_eating;
 }	t_philo;
 
 typedef struct s_state
@@ -109,20 +119,103 @@ typedef struct s_state
 	int	philos_dead;
 }	t_state;
 
+typedef struct s_simulation
+{
+	t_SIMstate	state;
+	t_philo		*philo;
+}	t_simulation;
+
+size_t	get_time(void)
+{
+	struct timeval	time;
+
+	gettimeofday(&time, NULL);
+	return (time.tv_sec * (size_t)1000 + time.tv_usec / (size_t)1000);
+}
+
+size_t	get_crent_time(size_t start)
+{
+	return (get_time() - start);
+}
+
+void	*monitor(void *args)
+{
+	t_philo	*pinfo;
+
+	pinfo = (t_philo *)args;
+	while (1)
+	{
+		pthread_mutex_lock(pinfo->dead_check);
+		if (*(pinfo->state) != SMO_DEAD && !pinfo->eating && pinfo->done_eating == 0 && get_crent_time(pinfo->SIMstart) - pinfo->last_meal >= pinfo->rotine.tdie)
+		{
+			printf("◦ %zu %i died\n", get_crent_time(pinfo->SIMstart), pinfo->num);
+			*(pinfo->state) = SMO_DEAD;
+			// printf("%zu %d\n", get_crent_time(pinfo->SIMstart) - pinfo->last_meal , pinfo->rotine.tdie);
+			return (NULL);
+		}
+		pthread_mutex_unlock(pinfo->dead_check);
+	}
+	return (NULL);
+}
+
 void	*philo_rotine(void *args)
 {
 	t_philo	*pinfo;
-	struct timeval timestamp;
 
 	pinfo = (t_philo *)args;
-	gettimeofday(&timestamp, NULL);
-	while (pinfo->state == P_ALIVE)
+	int eaten_meals = 0;
+	pthread_t	monitor_id;
+	pthread_create(&monitor_id, NULL, monitor, args);
+	size_t	time;
+	while (*(pinfo->state) == ALL_ALIVE 
+		&& (pinfo->rotine.meals_num == -1 || eaten_meals < pinfo->rotine.meals_num))
 	{
-		// pthread_mutex_lock(&pinfo->lfork);
-		printf("◦ %zu %i is thinking\n", (timestamp.tv_sec * 1000 + timestamp.tv_usec / 1000) - pinfo->start, pinfo->pnum);
-		usleep(pinfo->rotine.tslp);
-		pinfo->state = P_DEAD;
-		// printf("◦ %i %i\n", timestamp.tv_usec, pinfo->pnum);
+		if (*(pinfo->state) == SMO_DEAD)
+			return (NULL);
+		if (pinfo->num % 2 == 1)
+		{
+			pthread_mutex_lock(&pinfo->lfork);
+			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->SIMstart, pinfo->num);
+			if (*(pinfo->state) == SMO_DEAD)
+				return (NULL);
+			pthread_mutex_lock(pinfo->rfork);
+			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->SIMstart, pinfo->num);
+		}
+		else
+		{
+			pthread_mutex_lock(pinfo->rfork);
+			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->SIMstart, pinfo->num);
+			if (*(pinfo->state) == SMO_DEAD)
+				return (NULL);
+			pthread_mutex_lock(&pinfo->lfork);
+			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->SIMstart, pinfo->num);
+		}
+		pinfo->eating = 1;
+		time = get_time() - pinfo->SIMstart;
+		printf("◦ %zu %i is eating\n", time, pinfo->num);
+		pinfo->last_meal =  time;
+		usleep(pinfo->rotine.teat * 1000);
+		eaten_meals++;
+		if(pinfo->rotine.meals_num != -1 && eaten_meals == pinfo->rotine.meals_num)
+			pinfo->done_eating = 1;
+		pinfo->eating = 0;
+		if (pinfo->num % 2 == 1)
+		{
+			pthread_mutex_unlock(&pinfo->lfork);
+			pthread_mutex_unlock(pinfo->rfork);
+		}
+		else
+		{
+			pthread_mutex_unlock(pinfo->rfork);
+			pthread_mutex_unlock(&pinfo->lfork);
+		}
+		if (*(pinfo->state) == SMO_DEAD)
+			return (NULL);
+		printf("◦ %zu %i is sleeping\n", get_time() - pinfo->SIMstart, pinfo->num);
+		usleep(pinfo->rotine.tslp * 1000);
+		if (*(pinfo->state) == SMO_DEAD)
+				return (NULL);
+		printf("◦ %zu %i is thinking\n", get_time() - pinfo->SIMstart, pinfo->num);
 	}
 	return (NULL);
 }
@@ -150,12 +243,12 @@ void	*philo_rotine(void *args)
 
 int	main(int argc, char **argv)
 {
-	int			philos_num;
-	t_philo		*pinfo;
-	t_rotine	rotine;
-	int			i;
-	int			t;
-	struct timeval timestamp;
+	t_simulation	sim;
+	int				philos_num;
+	t_philo			*pinfo;
+	t_rotine		rotine;
+	int				i;
+	int				t;
 
 	if (!check_args(argc, argv))
 		return (1);
@@ -174,25 +267,29 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 	i = 0;
-	gettimeofday(&timestamp, NULL);
-	size_t start = timestamp.tv_sec * 1000 + timestamp.tv_usec / 1000;
-	printf("%lu\n", start);
-	// exit(1);
+	size_t SIMstart = get_time();
+	t_SIMstate	sstate = ALL_ALIVE;
+	pthread_mutex_t dead_check;
+	pthread_mutex_init(&dead_check, NULL);
 	while (i < philos_num)
 	{
-		pinfo[i].pnum = i + 1;
+		pinfo[i].num = i + 1;
 		pinfo[i].rotine.tdie = rotine.tdie;
 		pinfo[i].rotine.teat = rotine.teat;
 		pinfo[i].rotine.tslp = rotine.tslp;
 		pinfo[i].rotine.meals_num = rotine.meals_num;
-		pinfo[i].state = P_ALIVE;
-		pinfo[i].start = start;
+		pinfo[i].state = &sstate;
+		pinfo[i].SIMstart = SIMstart;
+		pinfo[i].last_meal = get_crent_time(SIMstart);
+		pinfo[i].eating = 0;
+		pinfo[i].dead_check = &dead_check;
+		pinfo[i].done_eating = 0;
 		pthread_mutex_init(&pinfo[i].lfork, NULL);
 		if (i == 0)
 			pinfo[i].rfork = &pinfo[philos_num - 1].lfork;
 		else
 			pinfo[i].rfork = &pinfo[i - 1].lfork;
-		t = pthread_create(&pinfo[i].pid, NULL, philo_rotine, &pinfo[i]);
+		t = pthread_create(&pinfo[i].id, NULL, philo_rotine, &pinfo[i]);
 		if (t != 0)
 		{
 			free(pinfo);
@@ -202,38 +299,34 @@ int	main(int argc, char **argv)
 		i++;
 	}
 	i = 0;
-	// while (i < philos_num)
-	// {
-	// 	t = pthread_join(pinfo[i].pid, NULL);
-	// 	if (t != 0)
-	// 	{
-	// 		free(pinfo);
-	// 		errorEXITnb(t, "pthread_join");
-	// 		return (1);
-	// 	}
-	// 	printf("Joined with thread %d\n", pinfo[i].pnum);
-	// 	i++;
-	// }
-	t_state state;
-	state.philos_alive = philos_num;
-	state.philos_dead = 0;
-	pthread_mutex_t mutex;
-	pthread_mutex_init(&mutex, NULL);
-	while (state.philos_alive > 0) 
+	while (i < philos_num)
 	{
-		gettimeofday(&timestamp, NULL);
-
-		for (i = 0; i < philos_num; i++) 
+		t = pthread_join(pinfo[i].id, NULL);
+		if (t != 0)
 		{
-			if (pinfo[i].state == P_DEAD)
-			{
-				t = pthread_join(pinfo[i].pid, NULL);
-				state.philos_alive--;
-				pinfo[i].state = P_JOINED;
-				printf("◦ %zu %i died\n", (timestamp.tv_sec * 1000 + timestamp.tv_usec / 1000) - start, pinfo[i].pnum);
-			}
+			free(pinfo);
+			errorEXITnb(t, "pthread_join");
+			return (1);
 		}
+		// printf("Joined with thread %d\n", pinfo[i].num);
+		i++;
 	}
+	// t_state state;
+	// state.philos_alive = philos_num;
+	// state.philos_dead = 0;
+	// while (state.philos_alive > 0) 
+	// {
+	// 	for (i = 0; i < philos_num; i++) 
+	// 	{
+	// 		if (pinfo[i].state == P_DEAD)
+	// 		{
+	// 			t = pthread_join(pinfo[i].id, NULL);
+	// 			state.philos_alive--;
+	// 			pinfo[i].state = P_JOINED;
+	// 			// printf("◦ %zu %i died\n", (time.tv_sec * 1000 + time.tv_usec / 1000) - start, pinfo[i].num);
+	// 		}
+	// 	}
+	// }
 
 	// destroy and free
 }
