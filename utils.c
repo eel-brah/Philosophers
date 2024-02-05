@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 05:00:32 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/03 05:01:31 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/05 07:02:00 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,27 +50,23 @@ int	is_all_digits(char *s)
 
 static int	ft_isspace(char c)
 {
-	if (c == '\t' || c == '\n' || c == '\v'
-		|| c == '\r' || c == '\f' || c == ' ')
+	if ((c >= 9 && c <= 13) || c == 32)
 		return (1);
 	return (0);
 }
 
-int	ft_atoi(const char *str)
+size_t	ft_atoz(const char *str)
 {
-	int			sign;
-	long int	nb;
+	size_t	nb;
 
-	sign = 1;
 	nb = 0;
 	while (ft_isspace(*str))
 		str++;
-	if (*str == '-' || *str == '+')
-		if (*str++ == '-')
-			sign = -1;
+	if (*str == '+')
+		str++;
 	while (*str >= '0' && *str <= '9')
 		nb = nb * 10 + (*str++ - '0');
-	return (nb * sign);
+	return (nb);
 }
 
 size_t	ft_strlen(const char *s)

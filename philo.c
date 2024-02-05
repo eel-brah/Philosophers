@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/05 03:35:55 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/05 07:02:50 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,27 +55,27 @@ int	check_args(int ac, char **av)
 	return (1);
 }
 
-int	*get_args(int ac, char **av)
-{
-	int	*args;
-	int	i;
+// int	*get_args(int ac, char **av)
+// {
+// 	int	*args;
+// 	int	i;
 
-	if (!check_args(ac, av))
-		return (NULL);
-	i = 0;
-	args = malloc(sizeof(*args) * (ac - 1));
-	if (!args)
-	{
-		handle_error("malloc");
-		return (NULL);
-	}
-	while (i < ac - 1)
-	{
-		args[i] = ft_atoi(av[i + 1]);
-		i++;
-	}
-	return (args);
-}
+// 	if (!check_args(ac, av))
+// 		return (NULL);
+// 	i = 0;
+// 	args = malloc(sizeof(*args) * (ac - 1));
+// 	if (!args)
+// 	{
+// 		handle_error("malloc");
+// 		return (NULL);
+// 	}
+// 	while (i < ac - 1)
+// 	{
+// 		args[i] = ft_atoi(av[i + 1]);
+// 		i++;
+// 	}
+// 	return (args);
+// }
 
 enum e_state
 { 
@@ -102,7 +102,7 @@ typedef struct s_philo
 {
 	pthread_t		id;
 	int				num;
-	t_rotine		rotine;
+	t_rotine		*rotine;
 	t_SIMstate		*state;
 	pthread_mutex_t lfork;
 	pthread_mutex_t *rfork;
@@ -146,7 +146,7 @@ void	*monitor(void *args)
 	while (1)
 	{
 		pthread_mutex_lock(pinfo->dead_check);
-		if (*(pinfo->state) != SMO_DEAD && !pinfo->eating && pinfo->done_eating == 0 && get_crent_time(pinfo->SIMstart) - pinfo->last_meal >= pinfo->rotine.tdie)
+		if (*(pinfo->state) != SMO_DEAD && !pinfo->eating && pinfo->done_eating == 0 && get_crent_time(pinfo->SIMstart) - pinfo->last_meal >= pinfo->rotine->tdie)
 		{
 			printf("◦ %zu %i died\n", get_crent_time(pinfo->SIMstart), pinfo->num);
 			*(pinfo->state) = SMO_DEAD;
@@ -167,8 +167,8 @@ void	*philo_rotine(void *args)
 	pthread_t	monitor_id;
 	pthread_create(&monitor_id, NULL, monitor, args);
 	size_t	time;
-	while (*(pinfo->state) == ALL_ALIVE 
-		&& (pinfo->rotine.meals_num == -1 || eaten_meals < pinfo->rotine.meals_num))
+	while (*(pinfo->state) == ALL_ALIVE
+		&& (pinfo->rotine->meals_num == -1 || eaten_meals < pinfo->rotine->meals_num))
 	{
 		if (*(pinfo->state) == SMO_DEAD)
 			return (NULL);
@@ -194,9 +194,9 @@ void	*philo_rotine(void *args)
 		time = get_time() - pinfo->SIMstart;
 		printf("◦ %zu %i is eating\n", time, pinfo->num);
 		pinfo->last_meal =  time;
-		usleep(pinfo->rotine.teat * 1000);
+		usleep(pinfo->rotine->teat * 1000);
 		eaten_meals++;
-		if(pinfo->rotine.meals_num != -1 && eaten_meals == pinfo->rotine.meals_num)
+		if(pinfo->rotine->meals_num != -1 && eaten_meals == pinfo->rotine->meals_num)
 			pinfo->done_eating = 1;
 		pinfo->eating = 0;
 		if (pinfo->num % 2 == 1)
@@ -211,8 +211,11 @@ void	*philo_rotine(void *args)
 		}
 		if (*(pinfo->state) == SMO_DEAD)
 			return (NULL);
-		printf("◦ %zu %i is sleeping\n", get_time() - pinfo->SIMstart, pinfo->num);
-		usleep(pinfo->rotine.tslp * 1000);
+		if (pinfo->rotine->tslp > 0)
+		{
+			printf("◦ %zu %i is sleeping\n", get_time() - pinfo->SIMstart, pinfo->num);
+			usleep(pinfo->rotine->tslp * 1000);
+		}
 		if (*(pinfo->state) == SMO_DEAD)
 				return (NULL);
 		printf("◦ %zu %i is thinking\n", get_time() - pinfo->SIMstart, pinfo->num);
@@ -241,10 +244,43 @@ void	*philo_rotine(void *args)
 // If a philosopher didn’t start eating time_to_die
 // milliseconds since the beginning of their last meal or the beginning of the simulation, they die
 
+int	init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine)
+{
+	*philos_num = ft_atoz(argv[1]);
+	if (philos_num == 0)
+	{
+		printf("🍝 Spaghetti has survived\n   Mession accomplished\n");
+		return (0);
+	}
+	rotine->tdie = ft_atoz(argv[2]);
+	if (rotine->tdie == 0) // ◦ 0 1 died
+	{
+		printf("All philosophers have died under mysterious circumstances\n");
+		return (0);
+	}
+	rotine->teat = ft_atoz(argv[3]);
+	if (rotine->teat == 0) // ◦ 0 1 died
+	{
+		printf("All philosophers starved to death\n");
+		return (0);
+	}
+	rotine->tslp = ft_atoz(argv[4]); // 0
+	if (argc == 6)
+		rotine->meals_num = ft_atoz(argv[5]);
+	else
+		rotine->meals_num = -1;
+	if (rotine->meals_num == 0) // ◦ 0 1 died
+	{
+		printf("All philosophers starved to death\n");
+		return (0);
+	}
+	return (1);
+}
+
 int	main(int argc, char **argv)
 {
 	t_simulation	sim;
-	int				philos_num;
+	size_t			philos_num;
 	t_philo			*pinfo;
 	t_rotine		rotine;
 	int				i;
@@ -252,14 +288,8 @@ int	main(int argc, char **argv)
 
 	if (!check_args(argc, argv))
 		return (1);
-	philos_num = ft_atoi(argv[1]);
-	rotine.tdie = ft_atoi(argv[2]);
-	rotine.teat = ft_atoi(argv[3]);
-	rotine.tslp = ft_atoi(argv[4]);
-	if (argc == 6)
-		rotine.meals_num = ft_atoi(argv[5]);
-	else
-		rotine.meals_num = -1;
+	if (!init_rotine(argv, argc, &philos_num, &rotine))
+		return (0);
 	pinfo = malloc(sizeof(*pinfo) * philos_num);
 	if (!pinfo)
 	{
@@ -274,10 +304,7 @@ int	main(int argc, char **argv)
 	while (i < philos_num)
 	{
 		pinfo[i].num = i + 1;
-		pinfo[i].rotine.tdie = rotine.tdie;
-		pinfo[i].rotine.teat = rotine.teat;
-		pinfo[i].rotine.tslp = rotine.tslp;
-		pinfo[i].rotine.meals_num = rotine.meals_num;
+		pinfo[i].rotine = &rotine;
 		pinfo[i].state = &sstate;
 		pinfo[i].SIMstart = SIMstart;
 		pinfo[i].last_meal = get_crent_time(SIMstart);
