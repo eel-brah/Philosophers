@@ -98,19 +98,29 @@ typedef struct s_rotine
 	int meals_num;
 }	t_rotine;
 
+typedef struct s_simulation
+{
+	t_SIMstate	state;
+	size_t		SIMstart;
+	pthread_mutex_t dead_check;
+	t_rotine		rotine;
+}	t_simulation;
+
 typedef struct s_philo
 {
 	pthread_t		id;
 	int				num;
-	t_rotine		*rotine;
-	t_SIMstate		*state;
+	// t_rotine		*rotine;
+	// t_SIMstate		*state;
 	pthread_mutex_t lfork;
 	pthread_mutex_t *rfork;
-	size_t			SIMstart;
+	// size_t			SIMstart;
 	size_t			last_meal;
 	char			eating;
-	pthread_mutex_t *dead_check;
+	// pthread_mutex_t *dead_check;
 	char			done_eating;
+	pthread_mutex_t philo_dead_check;
+	t_simulation	*sim;
 }	t_philo;
 
 typedef struct s_state
@@ -119,11 +129,7 @@ typedef struct s_state
 	int	philos_dead;
 }	t_state;
 
-typedef struct s_simulation
-{
-	t_SIMstate	state;
-	t_philo		*philo;
-}	t_simulation;
+
 
 size_t	get_time(void)
 {
@@ -143,17 +149,23 @@ void	*monitor(void *args)
 	t_philo	*pinfo;
 
 	pinfo = (t_philo *)args;
-	while (1)
+	while (pinfo->sim->state != SMO_DEAD && pinfo->done_eating == 0)
 	{
-		pthread_mutex_lock(pinfo->dead_check);
-		if (*(pinfo->state) != SMO_DEAD && !pinfo->eating && pinfo->done_eating == 0 && get_crent_time(pinfo->SIMstart) - pinfo->last_meal >= pinfo->rotine->tdie)
+		pthread_mutex_lock(&pinfo->sim->dead_check);
+		pthread_mutex_lock(&pinfo->philo_dead_check);
+		// if (pinfo->num == 2)
+		// 	printf("%uz\n", get_crent_time(pinfo->sim->SIMstart));
+		if (pinfo->sim->state != SMO_DEAD && pinfo->done_eating == 0
+			&& !pinfo->eating && get_crent_time(pinfo->sim->SIMstart) - pinfo->last_meal >= pinfo->sim->rotine.tdie)
 		{
-			printf("◦ %zu %i died\n", get_crent_time(pinfo->SIMstart), pinfo->num);
-			*(pinfo->state) = SMO_DEAD;
-			// printf("%zu %d\n", get_crent_time(pinfo->SIMstart) - pinfo->last_meal , pinfo->rotine.tdie);
+			printf("◦ %zu %i died\n", get_crent_time(pinfo->sim->SIMstart), pinfo->num);
+			pinfo->sim->state = SMO_DEAD;
+			pthread_mutex_unlock(&pinfo->philo_dead_check);
+			pthread_mutex_unlock(&pinfo->sim->dead_check);
 			return (NULL);
 		}
-		pthread_mutex_unlock(pinfo->dead_check);
+		pthread_mutex_unlock(&pinfo->philo_dead_check);
+		pthread_mutex_unlock(&pinfo->sim->dead_check);
 	}
 	return (NULL);
 }
@@ -161,42 +173,65 @@ void	*monitor(void *args)
 void	*philo_rotine(void *args)
 {
 	t_philo	*pinfo;
-
-	pinfo = (t_philo *)args;
-	int eaten_meals = 0;
+	int eaten_meals;
 	pthread_t	monitor_id;
-	pthread_create(&monitor_id, NULL, monitor, args);
 	size_t	time;
-	while (*(pinfo->state) == ALL_ALIVE
-		&& (pinfo->rotine->meals_num == -1 || eaten_meals < pinfo->rotine->meals_num))
+	// pthread_mutex_t philo_dead_check;
+	pthread_mutex_lock(&pinfo->philo_dead_check);
+	// // printf("%zu", get_crent_time(pinfo->num));
+	// // sleep(5);
+	pthread_mutex_unlock(&pinfo->philo_dead_check);
+	return (NULL);
+	// pinfo->philo_dead_check = &philo_dead_check;
+	// printf("LL\n");
+	// pthread_mutex_init(&philo_dead_check, NULL);
+	pinfo = (t_philo *)args;
+	eaten_meals = 0;
+	pthread_create(&monitor_id, NULL, monitor, args);
+	while (pinfo->sim->state == ALL_ALIVE
+		&& (pinfo->sim->rotine.meals_num == -1 || eaten_meals < pinfo->sim->rotine.meals_num))
 	{
-		if (*(pinfo->state) == SMO_DEAD)
-			return (NULL);
 		if (pinfo->num % 2 == 1)
 		{
 			pthread_mutex_lock(&pinfo->lfork);
-			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->SIMstart, pinfo->num);
-			if (*(pinfo->state) == SMO_DEAD)
+			pthread_mutex_lock(&pinfo->philo_dead_check);
+			if (pinfo->sim->state == SMO_DEAD)
 				return (NULL);
+			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->sim->SIMstart, pinfo->num);
+			pthread_mutex_unlock(&pinfo->philo_dead_check);
 			pthread_mutex_lock(pinfo->rfork);
-			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->SIMstart, pinfo->num);
+			pthread_mutex_lock(&pinfo->philo_dead_check);
+			if (pinfo->sim->state == SMO_DEAD)
+				return (NULL);
+			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->sim->SIMstart, pinfo->num);
+			pthread_mutex_unlock(&pinfo->philo_dead_check);
 		}
 		else
 		{
 			pthread_mutex_lock(pinfo->rfork);
-			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->SIMstart, pinfo->num);
-			if (*(pinfo->state) == SMO_DEAD)
+			pthread_mutex_lock(&pinfo->philo_dead_check);
+			if (pinfo->sim->state == SMO_DEAD)
 				return (NULL);
+			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->sim->SIMstart, pinfo->num);
+			pthread_mutex_unlock(&pinfo->philo_dead_check);
 			pthread_mutex_lock(&pinfo->lfork);
-			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->SIMstart, pinfo->num);
+			pthread_mutex_lock(&pinfo->philo_dead_check);
+			if (pinfo->sim->state == SMO_DEAD)
+				return (NULL);
+			printf("◦ %zu %i has taken a fork\n", get_time() - pinfo->sim->SIMstart, pinfo->num);
+			pthread_mutex_unlock(&pinfo->philo_dead_check);
 		}
+		pthread_mutex_lock(&pinfo->philo_dead_check);
+		if (pinfo->sim->state == SMO_DEAD)
+			return (NULL);
 		pinfo->eating = 1;
-		time = get_time() - pinfo->SIMstart;
+		time = get_time() - pinfo->sim->SIMstart;
 		printf("◦ %zu %i is eating\n", time, pinfo->num);
-		pinfo->last_meal =  time;
-		usleep(pinfo->rotine->teat * 1000);
+		pinfo->last_meal = time;
+		pthread_mutex_unlock(&pinfo->philo_dead_check);
+		usleep(pinfo->sim->rotine.teat * 1000);
 		eaten_meals++;
-		if(pinfo->rotine->meals_num != -1 && eaten_meals == pinfo->rotine->meals_num)
+		if(pinfo->sim->rotine.meals_num != -1 && eaten_meals == pinfo->sim->rotine.meals_num)
 			pinfo->done_eating = 1;
 		pinfo->eating = 0;
 		if (pinfo->num % 2 == 1)
@@ -209,17 +244,22 @@ void	*philo_rotine(void *args)
 			pthread_mutex_unlock(pinfo->rfork);
 			pthread_mutex_unlock(&pinfo->lfork);
 		}
-		if (*(pinfo->state) == SMO_DEAD)
-			return (NULL);
-		if (pinfo->rotine->tslp > 0)
+		if (pinfo->sim->rotine.tslp > 0)
 		{
-			printf("◦ %zu %i is sleeping\n", get_time() - pinfo->SIMstart, pinfo->num);
-			usleep(pinfo->rotine->tslp * 1000);
-		}
-		if (*(pinfo->state) == SMO_DEAD)
+			pthread_mutex_lock(&pinfo->philo_dead_check);
+			if (pinfo->sim->state == SMO_DEAD)
 				return (NULL);
-		printf("◦ %zu %i is thinking\n", get_time() - pinfo->SIMstart, pinfo->num);
+			printf("◦ %zu %i is sleeping\n", get_time() - pinfo->sim->SIMstart, pinfo->num);
+			pthread_mutex_unlock(&pinfo->philo_dead_check);
+			usleep(pinfo->sim->rotine.tslp * 1000);
+		}
+		pthread_mutex_lock(&pinfo->philo_dead_check);
+		if (pinfo->sim->state == SMO_DEAD)
+			return (NULL);
+		printf("◦ %zu %i is thinking\n", get_time() - pinfo->sim->SIMstart, pinfo->num);
+		pthread_mutex_unlock(&pinfo->philo_dead_check);
 	}
+	pthread_join(monitor_id, NULL);
 	return (NULL);
 }
 
@@ -282,13 +322,12 @@ int	main(int argc, char **argv)
 	t_simulation	sim;
 	size_t			philos_num;
 	t_philo			*pinfo;
-	t_rotine		rotine;
 	int				i;
 	int				t;
 
 	if (!check_args(argc, argv))
 		return (1);
-	if (!init_rotine(argv, argc, &philos_num, &rotine))
+	if (!init_rotine(argv, argc, &philos_num, &sim.rotine))
 		return (0);
 	pinfo = malloc(sizeof(*pinfo) * philos_num);
 	if (!pinfo)
@@ -297,20 +336,17 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 	i = 0;
-	size_t SIMstart = get_time();
-	t_SIMstate	sstate = ALL_ALIVE;
-	pthread_mutex_t dead_check;
-	pthread_mutex_init(&dead_check, NULL);
+	pthread_mutex_init(&sim.dead_check, NULL);
+	sim.state = ALL_ALIVE;
+	sim.SIMstart = get_time();
 	while (i < philos_num)
 	{
 		pinfo[i].num = i + 1;
-		pinfo[i].rotine = &rotine;
-		pinfo[i].state = &sstate;
-		pinfo[i].SIMstart = SIMstart;
-		pinfo[i].last_meal = get_crent_time(SIMstart);
+		pinfo[i].last_meal = get_crent_time(sim.SIMstart); // check
 		pinfo[i].eating = 0;
-		pinfo[i].dead_check = &dead_check;
 		pinfo[i].done_eating = 0;
+		pinfo[i].sim = &sim;
+		pthread_mutex_init(&pinfo[i].philo_dead_check, NULL);
 		pthread_mutex_init(&pinfo[i].lfork, NULL);
 		if (i == 0)
 			pinfo[i].rfork = &pinfo[philos_num - 1].lfork;
@@ -338,6 +374,7 @@ int	main(int argc, char **argv)
 		// printf("Joined with thread %d\n", pinfo[i].num);
 		i++;
 	}
+	// sleep(20);
 	// t_state state;
 	// state.philos_alive = philos_num;
 	// state.philos_dead = 0;
