@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/06 18:47:23 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/07 18:10:28 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,7 +151,7 @@ void	*monitor(void *args)
 {
 	t_philo	*pinfo;
 	pinfo = (t_philo *)args;
-	while (pinfo->sim->state != SMO_DEAD && pinfo->done_eating == 0)
+	while (1)
 	{
 		pthread_mutex_lock(&pinfo->sim->dead_check);
 		if (pinfo->sim->state != SMO_DEAD && pinfo->done_eating == 0
@@ -164,6 +164,11 @@ void	*monitor(void *args)
 			pthread_mutex_unlock(&pinfo->sim->dead_check);
 			return (NULL);
 		}
+		else if (pinfo->sim->state == SMO_DEAD || pinfo->done_eating)
+		{
+			pthread_mutex_unlock(&pinfo->sim->dead_check);
+			return (NULL);
+		}
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
 	}
 	return (NULL);
@@ -172,15 +177,15 @@ void	*monitor(void *args)
 void	set_forks(t_philo *pinfo, void **first_fork, void **second_fork)
 {
 	if (pinfo->num % 2 == 1)
-		{
-			*first_fork = &pinfo->forks.lfork;
-			*second_fork = pinfo->forks.rfork;
-		}
-		else
-		{
-			*first_fork = pinfo->forks.rfork;
-			*second_fork = &pinfo->forks.lfork;
-		}
+	{
+		*first_fork = &pinfo->forks.lfork;
+		*second_fork = pinfo->forks.rfork;
+	}
+	else
+	{
+		*first_fork = pinfo->forks.rfork;
+		*second_fork = &pinfo->forks.lfork;
+	}
 }
 
 void	*take_forks(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork)
@@ -226,12 +231,12 @@ void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *secon
 		pinfo->eating = 1;
 		printf("◦ %zu %i is eating\n",  get_time() - pinfo->sim->SIMstart, pinfo->num);
 		pinfo->last_meal = get_time() - pinfo->sim->SIMstart;
-		pthread_mutex_unlock(&pinfo->sim->dead_check);
-		usleep(pinfo->sim->rotine.teat * 1000);
 		pinfo->eaten_meals++;
 		if(pinfo->sim->is_meals_limited && pinfo->eaten_meals == pinfo->sim->rotine.meals_num)
 			pinfo->done_eating = 1;
 		pinfo->eating = 0;
+		pthread_mutex_unlock(&pinfo->sim->dead_check);
+		usleep(pinfo->sim->rotine.teat * 1000);
 	}
 	pthread_mutex_unlock(first_fork);
 	pthread_mutex_unlock(second_fork);
@@ -270,9 +275,9 @@ void	*thinking(t_philo *pinfo)
 
 void	*philo_rotine(void *args)
 {
-	t_philo		*pinfo;
-	pthread_t	monitor_id;
-	int			t;
+	t_philo			*pinfo;
+	pthread_t		monitor_id;
+	int				t;
 	pthread_mutex_t	*first_fork;
 	pthread_mutex_t	*second_fork;
 
@@ -284,14 +289,21 @@ void	*philo_rotine(void *args)
 		pinfo->sim->state = SMO_DEAD;
 		return (NULL);
 	}
-	while (pinfo->sim->state == ALL_ALIVE && (pinfo->sim->is_meals_limited == 0
-			|| (pinfo->sim->rotine.meals_num == 0 || pinfo->eaten_meals < pinfo->sim->rotine.meals_num)))
+	// && (pinfo->sim->is_meals_limited == 0 || (pinfo->sim->rotine.meals_num == 0 
+	// 	|| pinfo->eaten_meals < pinfo->sim->rotine.meals_num)))
+	while (!pinfo->done_eating)
 	{
 		set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
 		if (!eating(pinfo, first_fork, second_fork))
+		{
+			pthread_join(monitor_id, NULL);
 			return (NULL);
+		}
 		if (!sleeping(pinfo) || !thinking(pinfo))
-			return (NULL);	
+		{
+			pthread_join(monitor_id, NULL);
+			return (NULL);
+		}
 	}
 	pthread_join(monitor_id, NULL);
 	return (NULL);
@@ -306,24 +318,14 @@ int	init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine)
 		return (0);
 	}
 	rotine->tdie = ft_atoz(argv[2]);
-	// if (rotine->tdie == 0) // ◦ 0 1 died
-	// {
-	// 	printf("All philosophers have died under mysterious circumstances\n");
-	// 	return (0);
-	// }
 	rotine->teat = ft_atoz(argv[3]);
-	// if (rotine->teat == 0) // ◦ 0 1 died
-	// {
-	// 	printf("All philosophers starved to death\n");
-	// 	return (0);
-	// }
-	rotine->tslp = ft_atoz(argv[4]); // 0
+	rotine->tslp = ft_atoz(argv[4]);
 	rotine->meals_num = 0;
 	if (argc == 6)
 		rotine->meals_num = ft_atoz(argv[5]);
 	return (1);
 }
-#include <string.h>
+
 t_philo	*pre_init_pinfo(int ac, size_t philos_num, t_simulation *sim)
 {
 	t_philo	*pinfo;
@@ -441,11 +443,12 @@ int	main(int argc, char **argv)
 	while (i < philos_num)
 	{
 		t = pthread_join(pinfo[i].id, NULL);
-		if (t != 0)
+		if (t)
 		{
-			free(pinfo);
+			// free(pinfo);
+			// pthread_mutex_destroy(&sim.dead_check);
 			handle_errorEN(t, "pthread_join");
-			return (1);
+			// return (1);
 		}
 		pthread_mutex_destroy(&pinfo[i].forks.lfork);
 		i++;

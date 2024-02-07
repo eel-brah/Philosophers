@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:42 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/05 07:03:09 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/07 16:23:24 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <unistd.h>
 # include <pthread.h>
 # include <sys/time.h>
+# include <string.h>
 
 size_t		ft_atoz(const char *str);
 size_t	ft_strlen(const char *s);
