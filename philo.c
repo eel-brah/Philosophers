@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/07 19:02:43 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/07 23:05:34 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,28 +55,6 @@ int	check_args(int ac, char **av)
 	return (1);
 }
 
-// int	*get_args(int ac, char **av)
-// {
-// 	int	*args;
-// 	int	i;
-
-// 	if (!check_args(ac, av))
-// 		return (NULL);
-// 	i = 0;
-// 	args = malloc(sizeof(*args) * (ac - 1));
-// 	if (!args)
-// 	{
-// 		handle_error("malloc");
-// 		return (NULL);
-// 	}
-// 	while (i < ac - 1)
-// 	{
-// 		args[i] = ft_atoi(av[i + 1]);
-// 		i++;
-// 	}
-// 	return (args);
-// }
-
 enum e_state
 { 
 	P_ALIVE,
@@ -124,6 +102,7 @@ typedef struct s_philo
 	char			done_eating;
 	size_t			eaten_meals;
 	t_simulation	*sim;
+	pthread_mutex_t	eating_check;
 }	t_philo;
 
 typedef struct s_state
@@ -131,8 +110,6 @@ typedef struct s_state
 	int	philos_alive;
 	int	philos_dead;
 }	t_state;
-
-
 
 size_t	get_time(void)
 {
@@ -147,28 +124,38 @@ size_t	get_crent_time(size_t start)
 	return (get_time() - start);
 }
 
+void _dead(t_philo *pinfo)
+{
+	printf("◦ %zu %i died\n", get_crent_time(pinfo->sim->SIMstart), pinfo->num);
+	pinfo->sim->state = SMO_DEAD;
+	if (pinfo->sim->one_philo)
+		pthread_mutex_unlock(&pinfo->forks.lfork);
+	pthread_mutex_unlock(&pinfo->eating_check);
+	pthread_mutex_unlock(&pinfo->sim->dead_check);
+}
+
 void	*monitor(void *args)
 {
 	t_philo	*pinfo;
+
 	pinfo = (t_philo *)args;
 	while (1)
 	{
 		pthread_mutex_lock(&pinfo->sim->dead_check);
+		pthread_mutex_lock(&pinfo->eating_check);
 		if (pinfo->sim->state != SMO_DEAD && pinfo->done_eating == 0
 			&& !pinfo->eating && get_crent_time(pinfo->sim->SIMstart) - pinfo->last_meal >= pinfo->sim->rotine.tdie)
 		{
-			printf("◦ %zu %i died\n", get_crent_time(pinfo->sim->SIMstart), pinfo->num);
-			pinfo->sim->state = SMO_DEAD;
-			if (pinfo->sim->one_philo)
-				pthread_mutex_unlock(&pinfo->forks.lfork);
-			pthread_mutex_unlock(&pinfo->sim->dead_check);
+			_dead(pinfo);
 			return (NULL);
 		}
 		else if (pinfo->sim->state == SMO_DEAD || pinfo->done_eating)
 		{
+			pthread_mutex_unlock(&pinfo->eating_check);
 			pthread_mutex_unlock(&pinfo->sim->dead_check);
 			return (NULL);
 		}
+		pthread_mutex_unlock(&pinfo->eating_check);
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
 	}
 	return (NULL);
@@ -214,29 +201,39 @@ void	*take_forks(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *s
 	return ((void *)1);
 }
 
+int	is_dead(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork)
+{
+	pthread_mutex_lock(&pinfo->sim->dead_check);
+	if (pinfo->sim->state == SMO_DEAD || !pinfo->sim->rotine.tdie)
+	{
+		pthread_mutex_unlock(first_fork);
+		pthread_mutex_unlock(second_fork);
+		pthread_mutex_unlock(&pinfo->sim->dead_check);
+		return (1);
+	}
+	return (0);
+}
+
 void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork)
 {
 	if (!take_forks(pinfo, first_fork, second_fork))
 		return (NULL);
-	if (pinfo->sim->rotine.teat > 0 && (pinfo->sim->is_meals_limited == 0 || (pinfo->sim->is_meals_limited && pinfo->sim->rotine.meals_num)))
-	{ // data race
-		pthread_mutex_lock(&pinfo->sim->dead_check);
-		if (pinfo->sim->state == SMO_DEAD || !pinfo->sim->rotine.tdie)
-		{
-			pthread_mutex_unlock(first_fork);
-			pthread_mutex_unlock(second_fork);
-			pthread_mutex_unlock(&pinfo->sim->dead_check);
+	if (pinfo->sim->rotine.teat > 0 && (pinfo->sim->is_meals_limited == 0
+		|| (pinfo->sim->is_meals_limited && pinfo->sim->rotine.meals_num)))
+	{
+		if (is_dead(pinfo, first_fork, second_fork))
 			return (NULL);
-		}
 		pinfo->eating = 1;
-		printf("◦ %zu %i is eating\n",  get_time() - pinfo->sim->SIMstart, pinfo->num);
-		pinfo->last_meal = get_time() - pinfo->sim->SIMstart;
 		pinfo->eaten_meals++;
 		if(pinfo->sim->is_meals_limited && pinfo->eaten_meals == pinfo->sim->rotine.meals_num)
 			pinfo->done_eating = 1;
-		pinfo->eating = 0;
+		printf("◦ %zu %i is eating\n",  get_time() - pinfo->sim->SIMstart, pinfo->num);
+		pinfo->last_meal = get_time() - pinfo->sim->SIMstart;
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
 		usleep(pinfo->sim->rotine.teat * 1000);
+		pthread_mutex_lock(&pinfo->eating_check);
+		pinfo->eating = 0;
+		pthread_mutex_unlock(&pinfo->eating_check);
 	}
 	pthread_mutex_unlock(first_fork);
 	pthread_mutex_unlock(second_fork);
@@ -382,10 +379,10 @@ t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim
 	{
 		pinfo[i].num = i + 1;
 		pinfo[i].sim = sim;
-		t = pthread_mutex_init(&pinfo[i].forks.lfork, NULL);
-		if (t)
+		if (pthread_mutex_init(&pinfo[i].forks.lfork, NULL) 
+			|| pthread_mutex_init(&pinfo[i].eating_check, NULL))
 		{
-			handle_errorEN(t, "pthread_mutex_init");
+			handle_error("pthread_mutex_init");
 			pthread_mutex_destroy(&sim->dead_check);
 			free(pinfo);
 			return (NULL);
@@ -450,13 +447,9 @@ int	main(int argc, char **argv)
 	{
 		t = pthread_join(pinfo[i].id, NULL);
 		if (t)
-		{
-			// free(pinfo);
-			// pthread_mutex_destroy(&sim.dead_check);
 			handle_errorEN(t, "pthread_join");
-			// return (1);
-		}
 		pthread_mutex_destroy(&pinfo[i].forks.lfork);
+		pthread_mutex_destroy(&pinfo[i].eating_check);
 		i++;
 	}
 	pthread_mutex_destroy(&sim.dead_check);
