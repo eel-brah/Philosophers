@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/07 18:10:28 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/07 19:02:43 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -219,7 +219,7 @@ void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *secon
 	if (!take_forks(pinfo, first_fork, second_fork))
 		return (NULL);
 	if (pinfo->sim->rotine.teat > 0 && (pinfo->sim->is_meals_limited == 0 || (pinfo->sim->is_meals_limited && pinfo->sim->rotine.meals_num)))
-	{
+	{ // data race
 		pthread_mutex_lock(&pinfo->sim->dead_check);
 		if (pinfo->sim->state == SMO_DEAD || !pinfo->sim->rotine.tdie)
 		{
@@ -273,24 +273,30 @@ void	*thinking(t_philo *pinfo)
 	return ((void *)1);
 }
 
+char	creat_monitor(pthread_t *monitor_id, void *args)
+{
+	int	t;
+
+	t = pthread_create(monitor_id, NULL, monitor, args);
+	if (t)
+	{
+		handle_errorEN(t, "pthread_create");
+		((t_philo *)args)->sim->state = SMO_DEAD;
+		return (1);
+	}
+	return (0);
+}
+
 void	*philo_rotine(void *args)
 {
 	t_philo			*pinfo;
 	pthread_t		monitor_id;
-	int				t;
 	pthread_mutex_t	*first_fork;
 	pthread_mutex_t	*second_fork;
 
 	pinfo = (t_philo *)args;
-	t = pthread_create(&monitor_id, NULL, monitor, args);
-	if (t)
-	{
-		handle_errorEN(t, "pthread_create");
-		pinfo->sim->state = SMO_DEAD;
+	if (creat_monitor(&monitor_id, args))
 		return (NULL);
-	}
-	// && (pinfo->sim->is_meals_limited == 0 || (pinfo->sim->rotine.meals_num == 0 
-	// 	|| pinfo->eaten_meals < pinfo->sim->rotine.meals_num)))
 	while (!pinfo->done_eating)
 	{
 		set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
