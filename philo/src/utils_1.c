@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "../include/philo.h"
 
 int	ft_strncmp(const char *s1, const char *s2, size_t n)
 {
@@ -48,27 +48,6 @@ int	is_all_digits(char *s)
 	return (1);
 }
 
-static int	ft_isspace(char c)
-{
-	if ((c >= 9 && c <= 13) || c == 32)
-		return (1);
-	return (0);
-}
-
-size_t	ft_atoz(const char *str)
-{
-	size_t	nb;
-
-	nb = 0;
-	while (ft_isspace(*str))
-		str++;
-	if (*str == '+')
-		str++;
-	while (*str >= '0' && *str <= '9')
-		nb = nb * 10 + (*str++ - '0');
-	return (nb);
-}
-
 size_t	ft_strlen(const char *s)
 {
 	char	*ptr;
@@ -77,42 +56,4 @@ size_t	ft_strlen(const char *s)
 	while (*ptr)
 		ptr++;
 	return (ptr - s);
-}
-
-void	ft_putchar_fd(char c, int fd)
-{
-	if (fd >= 0)
-		write (fd, &c, 1);
-}
-
-static void	ft_putnbr(unsigned int nb, int fd)
-{
-	if (nb < 10)
-	{
-		ft_putchar_fd (nb + 48, fd);
-		return ;
-	}
-	ft_putnbr (nb / 10, fd);
-	ft_putchar_fd (nb % 10 + 48, fd);
-}
-
-void	ft_putnbr_fd(int n, int fd)
-{
-	unsigned int	nb;
-
-	if (fd < 0)
-		return ;
-	nb = n;
-	if (n < 0)
-	{
-		nb *= -1;
-		ft_putchar_fd('-', fd);
-	}
-	ft_putnbr(nb, fd);
-}
-
-void	ft_putstr_fd(char *s, int fd)
-{
-	if (s && *s && fd >= 0)
-		write(fd, s, ft_strlen(s));
 }
