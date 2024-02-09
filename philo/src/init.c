@@ -90,7 +90,7 @@ int	init_philos(t_philo *pinfo, size_t philos_num, t_simulation *sim)
 	sim->SIMstart = get_time();
 	while (i < philos_num)
 	{
-		pinfo[i].last_meal = get_crent_time(sim->SIMstart);
+		pinfo[i].last_meal = get_time();
 		j = pthread_create(&pinfo[i].id, NULL, philo_rotine, &pinfo[i]);
 		if (j)
 		{

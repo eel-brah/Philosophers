@@ -2,37 +2,37 @@
 
 void	_dead(t_philo *pinfo)
 {
-	printf("◦ %zu %zu died\n", get_crent_time(pinfo->sim->SIMstart), pinfo->num);
-	pinfo->sim->state = SMO_DEAD;
-	if (pinfo->sim->one_philo)
-		pthread_mutex_unlock(&pinfo->forks.lfork);
-	pthread_mutex_unlock(&pinfo->eating_check);
+	pthread_mutex_lock(&pinfo->sim->dead_check);
+	if (pinfo->sim->state != SMO_DEAD && pinfo->done_eating == 0)
+	{
+		printf("◦ %zu %zu died\n", get_crent_time(pinfo->sim->SIMstart), pinfo->num);
+		pinfo->sim->state = SMO_DEAD;
+		if (pinfo->sim->one_philo)
+			pthread_mutex_unlock(&pinfo->forks.lfork);
+	}
 	pthread_mutex_unlock(&pinfo->sim->dead_check);
+	pthread_mutex_unlock(&pinfo->eating_check);
 }
 
 void	*monitor(void *args)
 {
 	t_philo	*pinfo;
+	size_t	i;
 
 	pinfo = (t_philo *)args;
+	i = 0;
 	while (1)
 	{
-		pthread_mutex_lock(&pinfo->sim->dead_check);
-		pthread_mutex_lock(&pinfo->eating_check);
-		if (pinfo->sim->state != SMO_DEAD && pinfo->done_eating == 0
-			&& !pinfo->eating && get_crent_time(pinfo->sim->SIMstart) - pinfo->last_meal >= pinfo->sim->rotine.tdie)
+		pthread_mutex_lock(&pinfo[i].eating_check);
+		if (!pinfo[i].eating && get_time() - pinfo[i].last_meal >= pinfo[i].sim->rotine.tdie)
 		{
-			_dead(pinfo);
+			_dead(&pinfo[i]);
 			return (NULL);
 		}
-		else if (pinfo->sim->state == SMO_DEAD || pinfo->done_eating)
-		{
-			pthread_mutex_unlock(&pinfo->eating_check);
-			pthread_mutex_unlock(&pinfo->sim->dead_check);
-			return (NULL);
-		}
-		pthread_mutex_unlock(&pinfo->eating_check);
-		pthread_mutex_unlock(&pinfo->sim->dead_check);
+		pthread_mutex_unlock(&pinfo[i].eating_check);
+		i++;
+		if (i == pinfo[i - 1].sim->philos_num)
+			i = 0;
 	}
 	return (NULL);
 }

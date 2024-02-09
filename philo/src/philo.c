@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/07 23:05:34 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/09 16:05:56 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,28 +56,30 @@ void	set_forks(t_philo *pinfo, void **first_fork, void **second_fork)
 void	*philo_rotine(void *args)
 {
 	t_philo			*pinfo;
-	pthread_t		monitor_id;
+	// pthread_t		monitor_id;
 	pthread_mutex_t	*first_fork;
 	pthread_mutex_t	*second_fork;
 
 	pinfo = (t_philo *)args;
-	if (creat_monitor(&monitor_id, args))
-		return (NULL);
-	while (!pinfo->done_eating)
+	// if (creat_monitor(&monitor_id, args))
+	// 	return (NULL);
+	if (pinfo->num % 2 == 0)
+		ft_usleep(pinfo->sim->rotine.teat / 2);
+	set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
+	while (1)
 	{
-		set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
 		if (!eating(pinfo, first_fork, second_fork))
 		{
-			pthread_join(monitor_id, NULL);
+			// pthread_join(monitor_id, NULL);
 			return (NULL);
 		}
 		if (!sleeping(pinfo) || !thinking(pinfo))
 		{
-			pthread_join(monitor_id, NULL);
+			// pthread_join(monitor_id, NULL);
 			return (NULL);
 		}
 	}
-	pthread_join(monitor_id, NULL);
+	// pthread_join(monitor_id, NULL);
 	return (NULL);
 }
 
@@ -112,6 +114,7 @@ int	main(int argc, char **argv)
 	t_simulation	sim;
 	size_t			philos_num;
 	t_philo			*pinfo;
+	pthread_t		monitor_id;
 
 	pinfo = NULL;
 	if (!check_args(argc, argv))
@@ -121,12 +124,16 @@ int	main(int argc, char **argv)
 	pinfo = init_pinfo(argc, pinfo, philos_num, &sim);
 	if (!pinfo)
 		return (1);
+	sim.philos_num = philos_num;
 	if (init_philos(pinfo, philos_num, &sim))
 	{
 		pthread_mutex_destroy(&sim.dead_check);
 		free(pinfo);
 		return (1);
 	}
+	if (creat_monitor(&monitor_id, (void *)pinfo))
+		return (1);
+	pthread_join(monitor_id, NULL);
 	exting(pinfo, philos_num);
 	return (0);
 }

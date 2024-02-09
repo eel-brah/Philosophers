@@ -1,5 +1,5 @@
 CC := cc
-CFLAGS := -Wall -Wextra -Werror 
+CFLAGS := -Wall -Wextra -Werror
 
 PARN_DIR := ./philo
 SRC_DIR := $(PARN_DIR)/src
