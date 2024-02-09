@@ -55,7 +55,7 @@ void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *secon
 		printf("◦ %zu %zu is eating\n",  get_time() - pinfo->sim->SIMstart, pinfo->num);
 		pinfo->last_meal = get_time() - pinfo->sim->SIMstart;
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
-		usleep(pinfo->sim->rotine.teat * 1000);
+		ft_usleep(pinfo->sim->rotine.teat);
 		pthread_mutex_lock(&pinfo->eating_check);
 		pinfo->eating = 0;
 		pthread_mutex_unlock(&pinfo->eating_check);
@@ -77,7 +77,7 @@ void	*sleeping(t_philo *pinfo)
 		}
 		printf("◦ %zu %zu is sleeping\n", get_time() - pinfo->sim->SIMstart, pinfo->num);
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
-		usleep(pinfo->sim->rotine.tslp * 1000);
+		ft_usleep(pinfo->sim->rotine.tslp);
 	}
 	return ((void *)1);
 }

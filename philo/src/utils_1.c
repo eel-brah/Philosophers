@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils.c                                            :+:      :+:    :+:   */
+/*   utils_1.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 05:00:32 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/05 07:02:00 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/09 05:46:25 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,4 +56,13 @@ size_t	ft_strlen(const char *s)
 	while (*ptr)
 		ptr++;
 	return (ptr - s);
+}
+
+void	ft_usleep(size_t milliseconds)
+{
+	size_t	start;
+
+	start = get_time();
+	while (get_crent_time(start) < milliseconds)
+		usleep(200);
 }
