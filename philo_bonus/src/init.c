@@ -32,7 +32,7 @@ int	init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine)
 t_philo	*pre_init_pinfo(int ac, size_t philos_num, t_simulation *sim)
 {
 	t_philo	*pinfo;
-	int		t;
+	// int		t;
 
 	pinfo = malloc(sizeof(*pinfo) * philos_num);
 	if (!pinfo)
@@ -41,13 +41,13 @@ t_philo	*pre_init_pinfo(int ac, size_t philos_num, t_simulation *sim)
 		return (NULL);
 	}
 	memset(pinfo, 0, sizeof(*pinfo) * philos_num);
-	t = pthread_mutex_init(&sim->dead_check, NULL);
-	if (t)
-	{
-		handle_errorEN(t, "pthread_mutex_init");
-		free(pinfo);
-		return (NULL);
-	}
+	// t = pthread_mutex_init(&sim->dead_check, NULL);
+	// if (t)
+	// {
+	// 	handle_errorEN(t, "pthread_mutex_init");
+	// 	free(pinfo);
+	// 	return (NULL);
+	// }
 	sim->state = ALL_ALIVE;
 	sim->one_philo = 0;
 	if (philos_num == 1)
@@ -58,13 +58,13 @@ t_philo	*pre_init_pinfo(int ac, size_t philos_num, t_simulation *sim)
 	return (pinfo);
 }
 
-void	set_rfork(t_philo *pinfo, int i, size_t philos_num)
-{
-	if (i == 0)
-		pinfo[i].forks.rfork = &pinfo[philos_num - 1].forks.lfork;
-	else
-		pinfo[i].forks.rfork = &pinfo[i - 1].forks.lfork;
-}
+// void	set_rfork(t_philo *pinfo, int i, size_t philos_num)
+// {
+// 	if (i == 0)
+// 		pinfo[i].forks.rfork = &pinfo[philos_num - 1].forks.lfork;
+// 	else
+// 		pinfo[i].forks.rfork = &pinfo[i - 1].forks.lfork;
+// }
 
 t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim)
 {
@@ -78,16 +78,16 @@ t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim
 	{
 		pinfo[i].num = i + 1;
 		pinfo[i].sim = sim;
-		if (pthread_mutex_init(&pinfo[i].forks.lfork, NULL) 
-			|| pthread_mutex_init(&pinfo[i].eating_check, NULL))
-		{
-			handle_error("pthread_mutex_init");
-			if (pthread_mutex_destroy(&sim->dead_check))
-				handle_error("pthread_mutex_destroy");
-			free(pinfo);
-			return (NULL);
-		}
-		set_rfork(pinfo, i, philos_num);
+		// if (pthread_mutex_init(&pinfo[i].forks.lfork, NULL) 
+		// 	|| pthread_mutex_init(&pinfo[i].eating_check, NULL))
+		// {
+		// 	handle_error("pthread_mutex_init");
+		// 	if (pthread_mutex_destroy(&sim->dead_check))
+		// 		handle_error("pthread_mutex_destroy");
+		// 	free(pinfo);
+		// 	return (NULL);
+		// }
+		// set_rfork(pinfo, i, philos_num);
 		i++;
 	}
 	return (pinfo);
@@ -96,31 +96,34 @@ t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim
 int	start_philos(t_philo *pinfo, size_t philos_num, t_simulation *sim)
 {
 	size_t	i;
-	size_t	j;
+	// size_t	j;
 
 	i = 0;
 	sim->start = get_time();
 	while (i < philos_num)
 	{
 		pinfo[i].last_meal = get_time();
-		j = pthread_create(&pinfo[i].id, NULL, philo_rotine, &pinfo[i]);
-		if (j)
-		{
-			handle_errorEN(j, "pthread_create");
-			pthread_mutex_lock(&pinfo->sim->dead_check);
-			sim->state = SMO_DEAD;
-			pthread_mutex_unlock(&pinfo->sim->dead_check);
-			j = 0;
-			while (j < i)
-				pthread_join(pinfo[j++].id, NULL);
-			j = 0;
-			while (j < i)
-			{
-				pthread_mutex_destroy(&pinfo[j].forks.lfork);
-				pthread_mutex_destroy(&pinfo[j++].eating_check);
-			}
-			return (1);
-		}
+		pinfo[i].id = fork();
+		if (pinfo[i].id == 0)
+			philo_rotine(&pinfo[i]);
+		// j = pthread_create(&pinfo[i].id, NULL, philo_rotine, &pinfo[i]);
+		// if (j)
+		// {
+		// 	handle_errorEN(j, "pthread_create");
+		// 	pthread_mutex_lock(&pinfo->sim->dead_check);
+		// 	sim->state = SMO_DEAD;
+		// 	pthread_mutex_unlock(&pinfo->sim->dead_check);
+		// 	j = 0;
+		// 	while (j < i)
+		// 		pthread_join(pinfo[j++].id, NULL);
+		// 	j = 0;
+		// 	while (j < i)
+		// 	{
+		// 		pthread_mutex_destroy(&pinfo[j].forks.lfork);
+		// 		pthread_mutex_destroy(&pinfo[j++].eating_check);
+		// 	}
+		// 	return (1);
+		// }
 		i++;
 	}
 	return (0);

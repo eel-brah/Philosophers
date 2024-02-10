@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/10 12:18:42 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/10 13:36:24 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ void	*philo_rotine(void *args)
 	pinfo = (t_philo *)args;
 	if (pinfo->num % 2 == 0)
 	{
-		printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->SIMstart), pinfo->num);
+		printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->start), pinfo->num);
 		ft_usleep(pinfo->sim->rotine.teat / 2);
 	}
 	set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
@@ -116,7 +116,7 @@ int	main(int argc, char **argv)
 	pinfo = init_pinfo(argc, pinfo, sim.philos_num, &sim);
 	if (!pinfo)
 		return (1);
-	if (init_philos(pinfo, sim.philos_num, &sim)
+	if (start_philos(pinfo, sim.philos_num, &sim)
 		|| creat_monitor(&monitor_id, (void *)pinfo))
 	{
 		pthread_mutex_destroy(&sim.dead_check);

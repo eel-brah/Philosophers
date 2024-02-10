@@ -1,5 +1,5 @@
 CC := cc
-CFLAGS := -Wall -Wextra -Werror -fsanitize=thread
+CFLAGS := -Wall -Wextra -Werror
 
 PARN_DIR := .
 SRC_DIR := $(PARN_DIR)/src
@@ -17,7 +17,7 @@ NAME := philo
 all: $(BUILD_DIR) $(NAME)
 
 $(NAME): $(OBJ) $(INCLUDE)
-	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME) -fsanitize=thread -g
 	@echo "\033[1;34m$(NAME) \033[0;34mhas been compiled"
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(INCLUDE)

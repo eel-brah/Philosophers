@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:42 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/10 13:36:24 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/10 21:22:34 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,17 @@
 # include <pthread.h>
 # include <sys/time.h>
 # include <string.h>
+
+# include <fcntl.h>
+# include <limits.h>
+# include <sys/time.h>
+# include <semaphore.h>
+# include <signal.h>
+
+#define SEM_F001 "/sem_f001"
+#define SEM_F002 "/sem_f002"
+#define SEM_F003 "/sem_f003"
+
 
 typedef enum e_state
 { 
@@ -38,7 +49,9 @@ typedef struct s_simulation
 {
 	t_rotine		rotine;
 	t_state			state;
-	pthread_mutex_t	dead_check;
+	// pthread_mutex_t	dead_check;
+	sem_t			*dead;
+	sem_t			*eating;
 	size_t			start;
 	char			one_philo;
 	char			is_meals_limited;
@@ -47,16 +60,17 @@ typedef struct s_simulation
 
 typedef struct s_forks
 {
-	pthread_mutex_t	lfork;
-	pthread_mutex_t	*rfork;
+	sem_t	*lfork;
+	sem_t	*rfork;
 }	t_forks;
 
 typedef struct s_philo
 {
 	t_simulation	*sim;
-	t_forks			forks;
-	pthread_t		id;
-	pthread_mutex_t	eating_check;
+	// t_forks			forks;
+	sem_t			*forks;
+	pid_t			id;
+	// pthread_mutex_t	eating_check;
 	size_t			last_meal;
 	size_t			eaten_meals;
 	size_t			num;
@@ -70,11 +84,11 @@ void	ft_putstr_fd(char *s, int fd);
 int		is_all_digits(char *s);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
 void	ft_putnbr_fd(int n, int fd);
-void	*monitor(void *args);
-void	*take_forks(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork);
-void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork);
-void	*sleeping(t_philo *pinfo);
-void	*thinking(t_philo *pinfo);
+void	*is_dead(void *args);
+void	take_forks(t_philo *pinfo);
+void	eating(t_philo *pinfo);
+void	sleeping(t_philo *pinfo);
+void	thinking(t_philo *pinfo);
 char	creat_monitor(pthread_t *monitor_id, void *args);
 int		start_philos(t_philo *pinfo, size_t philos_num, t_simulation *sim);
 t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim);
@@ -83,7 +97,7 @@ void	handle_error(char *str);
 void	handle_errorEN(int s, char *str);
 size_t	get_time(void);
 size_t	get_ct(size_t start);
-void	*philo_rotine(void *args);
+void	philo_rotine(void *args);
 int		ft_isspace(char c);
 void	ft_usleep(size_t milliseconds);
 #endif

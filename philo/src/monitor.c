@@ -17,7 +17,7 @@ void	_dead(t_philo *pinfo)
 	pthread_mutex_lock(&pinfo->sim->dead_check);
 	if (pinfo->sim->state != SMO_DEAD && pinfo->done_eating == 0)
 	{
-		printf("◦ %zu %zu died\n", get_ct(pinfo->sim->SIMstart), pinfo->num);
+		printf("◦ %zu %zu died\n", get_ct(pinfo->sim->start), pinfo->num);
 		pinfo->sim->state = SMO_DEAD;
 		if (pinfo->sim->one_philo)
 			pthread_mutex_unlock(&pinfo->forks.lfork);

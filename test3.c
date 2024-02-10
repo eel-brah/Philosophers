@@ -48,13 +48,13 @@ int main()
 	{
 		sem_post(sem);
 		printf("Child2 %i\n", getppid());
-		exit(0);
+		exit(3);
 	}
 	if (waitpid(child1, &val, 0) == -1)
 		exit(EXIT_FAILURE);
 	if (waitpid(child2, &val, 0) == -1)
 		exit(EXIT_FAILURE);
-	printf("Prent: %i %i val %i\n", child1, child2, val >> 8);
+	printf("Prent: %i %i val %i\n", child1, child2, val);
 
 	if (sem_close(sem) == -1)
 		exit(EXIT_FAILURE);
