@@ -51,13 +51,27 @@ void	*monitor(void *args)
 
 char	creat_monitor(pthread_t *monitor_id, void *args)
 {
-	int	t;
+	int		t;
+	size_t	j;
+	t_philo	*pinfo;
 
+	pinfo = (t_philo *)args;
 	t = pthread_create(monitor_id, NULL, monitor, args);
 	if (t)
 	{
 		handle_errorEN(t, "pthread_create");
-		((t_philo *)args)->sim->state = SMO_DEAD;
+		pthread_mutex_lock(&pinfo->sim->dead_check);
+		pinfo->sim->state = SMO_DEAD;
+		pthread_mutex_unlock(&pinfo->sim->dead_check);
+		j = 0;
+		while (j < pinfo->sim->philos_num)
+			pthread_join(pinfo[j++].id, NULL);
+		j = 0;
+		while (j < pinfo->sim->philos_num)
+		{
+			pthread_mutex_destroy(&pinfo[j].forks.lfork);
+			pthread_mutex_destroy(&pinfo[j++].eating_check);
+		}
 		return (1);
 	}
 	return (0);

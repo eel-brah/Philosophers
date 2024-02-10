@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/10 11:51:20 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/10 12:18:42 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,28 +105,25 @@ void	exting(t_philo *pinfo, size_t philos_num)
 int	main(int argc, char **argv)
 {
 	t_simulation	sim;
-	size_t			philos_num;
 	t_philo			*pinfo;
 	pthread_t		monitor_id;
 
 	pinfo = NULL;
 	if (!check_args(argc, argv))
 		return (1);
-	if (!init_rotine(argv, argc, &philos_num, &sim.rotine))
+	if (!init_rotine(argv, argc, &sim.philos_num, &sim.rotine))
 		return (1);
-	pinfo = init_pinfo(argc, pinfo, philos_num, &sim);
+	pinfo = init_pinfo(argc, pinfo, sim.philos_num, &sim);
 	if (!pinfo)
 		return (1);
-	sim.philos_num = philos_num;
-	if (init_philos(pinfo, philos_num, &sim))
+	if (init_philos(pinfo, sim.philos_num, &sim)
+		|| creat_monitor(&monitor_id, (void *)pinfo))
 	{
 		pthread_mutex_destroy(&sim.dead_check);
 		free(pinfo);
 		return (1);
 	}
-	if (creat_monitor(&monitor_id, (void *)pinfo))
-		return (1);
 	pthread_join(monitor_id, NULL);
-	exting(pinfo, philos_num);
+	exting(pinfo, sim.philos_num);
 	return (0);
 }
