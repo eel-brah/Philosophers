@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 05:00:32 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/09 16:00:50 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/10 11:51:20 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,11 +58,11 @@ size_t	ft_strlen(const char *s)
 	return (ptr - s);
 }
 
-void	ft_usleep(size_t milliseconds)
+void	ft_usleep(size_t ms)
 {
 	size_t	start;
 
 	start = get_time();
-	while (get_crent_time(start) < milliseconds)
+	while (get_ct(start) < ms)
 		usleep(200);
 }

@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:42 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/09 12:46:50 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/10 11:51:20 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ int		init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine);
 void	handle_error(char *str);
 void	handle_errorEN(int s, char *str);
 size_t	get_time(void);
-size_t	get_crent_time(size_t start);
+size_t	get_ct(size_t start);
 void	*philo_rotine(void *args);
 int		ft_isspace(char c);
 void	ft_usleep(size_t milliseconds);

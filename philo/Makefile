@@ -1,7 +1,7 @@
 CC := cc
 CFLAGS := -Wall -Wextra -Werror
 
-PARN_DIR := ./philo
+PARN_DIR := .
 SRC_DIR := $(PARN_DIR)/src
 INCLUDE_DIR := $(PARN_DIR)/include
 BUILD_DIR := $(PARN_DIR)/build
@@ -12,9 +12,9 @@ INCLUDE := $(addprefix $(INCLUDE_DIR)/,$(INCLUDE))
 SRC := philo.c acts.c monitor.c init.c utils_1.c utils_2.c print.c
 OBJ := $(SRC:%.c=$(BUILD_DIR)/%.o)
 
-NAME := ppphilo
+NAME := philo
 
-all: pre $(NAME)
+all: $(BUILD_DIR) $(NAME)
 
 $(NAME): $(OBJ) $(INCLUDE)
 	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
@@ -23,7 +23,7 @@ $(NAME): $(OBJ) $(INCLUDE)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(INCLUDE)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-pre:
+$(BUILD_DIR):
 	@[ -d "$(BUILD_DIR)" ] || mkdir "$(BUILD_DIR)"
 
 clean:

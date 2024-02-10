@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/09 16:05:56 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/10 11:51:20 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,30 +56,23 @@ void	set_forks(t_philo *pinfo, void **first_fork, void **second_fork)
 void	*philo_rotine(void *args)
 {
 	t_philo			*pinfo;
-	// pthread_t		monitor_id;
 	pthread_mutex_t	*first_fork;
 	pthread_mutex_t	*second_fork;
 
 	pinfo = (t_philo *)args;
-	// if (creat_monitor(&monitor_id, args))
-	// 	return (NULL);
 	if (pinfo->num % 2 == 0)
+	{
+		printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->SIMstart), pinfo->num);
 		ft_usleep(pinfo->sim->rotine.teat / 2);
+	}
 	set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
 	while (1)
 	{
 		if (!eating(pinfo, first_fork, second_fork))
-		{
-			// pthread_join(monitor_id, NULL);
 			return (NULL);
-		}
 		if (!sleeping(pinfo) || !thinking(pinfo))
-		{
-			// pthread_join(monitor_id, NULL);
 			return (NULL);
-		}
 	}
-	// pthread_join(monitor_id, NULL);
 	return (NULL);
 }
 

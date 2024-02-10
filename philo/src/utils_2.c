@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_2.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/02/10 09:41:00 by eel-brah          #+#    #+#             */
+/*   Updated: 2024/02/10 09:41:00 by eel-brah         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/philo.h"
 
 void	handle_error(char *str)
@@ -25,7 +37,7 @@ size_t	get_time(void)
 	return (time.tv_sec * (size_t)1000 + time.tv_usec / (size_t)1000);
 }
 
-size_t	get_crent_time(size_t start)
+size_t	get_ct(size_t start)
 {
 	return (get_time() - start);
 }
