@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/10 13:36:24 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/11 15:40:28 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ void	*philo_rotine(void *args)
 	if (pinfo->num % 2 == 0)
 	{
 		printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->start), pinfo->num);
-		ft_usleep(pinfo->sim->rotine.teat / 2);
+		ft_msleep(pinfo->sim->rotine.teat / 2);
 	}
 	set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
 	while (1)

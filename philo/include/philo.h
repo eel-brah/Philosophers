@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:42 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/10 13:36:24 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/11 15:40:28 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,5 +85,5 @@ size_t	get_time(void);
 size_t	get_ct(size_t start);
 void	*philo_rotine(void *args);
 int		ft_isspace(char c);
-void	ft_usleep(size_t milliseconds);
+void	ft_msleep(size_t milliseconds);
 #endif

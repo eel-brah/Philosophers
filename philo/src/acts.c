@@ -70,7 +70,7 @@ void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *secon
 			return (NULL);
 		pinfo->last_meal = get_time();
 		pthread_mutex_unlock(&pinfo->eating_check);
-		ft_usleep(pinfo->sim->rotine.teat);
+		ft_msleep(pinfo->sim->rotine.teat);
 		pthread_mutex_lock(&pinfo->eating_check);
 		pinfo->eating = 0;
 		pthread_mutex_unlock(&pinfo->eating_check);
@@ -92,7 +92,7 @@ void	*sleeping(t_philo *pinfo)
 		}
 		printf("◦ %zu %zu is sleeping\n", get_ct(pinfo->sim->start), pinfo->num);
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
-		ft_usleep(pinfo->sim->rotine.tslp);
+		ft_msleep(pinfo->sim->rotine.tslp);
 	}
 	return ((void *)1);
 }
@@ -108,6 +108,6 @@ void	*thinking(t_philo *pinfo)
 	printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->start), pinfo->num);
 	pthread_mutex_unlock(&pinfo->sim->dead_check);
 	if (pinfo->sim->philos_num % 2 == 1 && pinfo->num % 2 == 1)
-		ft_usleep(pinfo->sim->rotine.teat / 4);
+		ft_msleep(pinfo->sim->rotine.teat / 4);
 	return ((void *)1);
 }
