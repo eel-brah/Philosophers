@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:42 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 15:56:38 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/11 19:56:15 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,12 +58,6 @@ typedef struct s_simulation
 	char			is_meals_limited;
 	size_t			philos_num;
 }	t_simulation;
-
-typedef struct s_forks
-{
-	sem_t	*lfork;
-	sem_t	*rfork;
-}	t_forks;
 
 typedef struct s_philo
 {

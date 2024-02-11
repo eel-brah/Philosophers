@@ -33,14 +33,6 @@ void	init_sems(t_philo *pinfo)
 	sem_unlink(SEM_F002);
 	sem_unlink(SEM_F001);
 	sem_unlink(SEM_F003);
-	sem_unlink(SEM_F004);
-	// if (sem_unlink(SEM_F002) == -1 || sem_unlink(SEM_F001) == -1
-	// 	|| sem_unlink(SEM_F003) == -1)
-	// {
-	// 	handle_error("sem_unlink");
-	// 	free(pinfo);
-	// 	exit(1);
-	// }
 	pinfo->sim->dead = sem_open(SEM_F002, O_CREAT | O_EXCL, 0666, 1);
 	if (pinfo->sim->dead == SEM_FAILED)
 	{
@@ -72,7 +64,6 @@ void	init_sems(t_philo *pinfo)
 
 t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim)
 {
-	// t_philo	*pinfo;
 	size_t	i;
 
 	pinfo = malloc(sizeof(*pinfo) * philos_num);

@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 16:17:32 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/11 18:52:38 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,11 @@ void	philo_rotine(void *args)
 
 	pinfo = (t_philo *)args;
 	pinfo->last_meal = get_time();
-	// if (pinfo->num % 2 == 0)
-	// {
-	// 	printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->start), pinfo->num);
-	// 	ft_msleep(pinfo->sim->rotine.teat / 2);
-	// }
+	if (pinfo->sim->rotine.teat < pinfo->sim->rotine.tdie && pinfo->num % 2 == 0)
+	{
+		printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->start), pinfo->num);
+		ft_msleep(pinfo->sim->rotine.teat / 2);
+	}
 	pthread_create(&monitor_id, NULL, is_dead, pinfo);
 	pthread_detach(monitor_id);
 	while (1)
@@ -61,37 +61,45 @@ void	philo_rotine(void *args)
 	exit(0);
 }
 
-// void	exting(t_philo *pinfo, size_t philos_num)
-// {
-// 	size_t	i;
-// 	int		t;
+void	kill_all(t_philo *pinfo)
+{
+	size_t	i;
 
-// 	i = 0;
-// 	while (i < philos_num)
-// 	{
-// 		t = pthread_join(pinfo[i].id, NULL);
-// 		if (t)
-// 			handle_errorEN(t, "pthread_join");
-// 		i++;
-// 	}
-// 	i = 0;
-// 	while (i < philos_num)
-// 	{
-// 		if (pthread_mutex_destroy(&pinfo[i].forks.lfork) 
-// 			|| pthread_mutex_destroy(&pinfo[i].eating_check))
-// 			handle_error("pthread_mutex_destroy");
-// 		i++;
-// 	}
-// 	if (pthread_mutex_destroy(&pinfo->sim->dead_check))
-// 		handle_error("pthread_mutex_destroy");
-// }
+	i = 0;
+	while (i < pinfo->sim->philos_num)
+		kill(pinfo[i++].id, 2);
+}
+
+void	exting(t_philo *pinfo)
+{
+	int		val;
+	pid_t	r;
+	size_t	num;
+
+	val = 0;
+	num = 0;
+	while (num < pinfo->sim->philos_num)
+	{
+		r = waitpid(-1, &val, 0);
+		if (r == -1)
+		{
+			handle_error("waitpid");
+			kill_all(pinfo);
+			break ;
+		}
+		if ((val >> 8) == 1)
+		{
+			kill_all(pinfo);
+			break ;
+		}
+		num++;
+	}
+}
 
 int	main(int argc, char **argv)
 {
 	t_simulation	sim;
 	t_philo			*pinfo;
-	int				val;
-	size_t			i;
 
 	pinfo = NULL;
 	check_args(argc, argv);
@@ -99,31 +107,7 @@ int	main(int argc, char **argv)
 	pinfo = init_pinfo(argc, pinfo, sim.philos_num, &sim);
 	init_sems(pinfo);
 	start_philos(pinfo, sim.philos_num, &sim);
-
-	val = 0;
-	i = 0;
-	pid_t	r;
-	size_t	num = 0;
-	while (num < sim.philos_num)
-	{
-		r = waitpid(-1, &val, 0);
-		if (r == -1)
-		{
-			handle_error("waitpid");
-			i = 0;
-			while (i < sim.philos_num)
-				kill(pinfo[i++].id, 2);
-			break ;
-		}
-		if ((val >> 8) == 1)
-		{
-			i = 0;
-			while (i < sim.philos_num)
-				kill(pinfo[i++].id, 2);
-			break ;
-		}
-		num++;
-	}
+	exting(pinfo);
 	sem_close(pinfo->sim->dead);
 	sem_unlink(SEM_F002);
 	sem_close(pinfo->sim->eating);
