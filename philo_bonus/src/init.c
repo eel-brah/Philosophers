@@ -12,13 +12,13 @@
 
 #include "../include/philo.h"
 
-int	init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine)
+void	init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine)
 {
 	*philos_num = ft_atoz(argv[1]);
 	if (*philos_num == 0)
 	{
 		printf("🍝 Spaghetti has survived\n   Mission accomplished\n");
-		return (0);
+		exit(1);
 	}
 	rotine->tdie = ft_atoz(argv[2]);
 	rotine->teat = ft_atoz(argv[3]);
@@ -26,28 +26,62 @@ int	init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine)
 	rotine->meals_num = 0;
 	if (argc == 6)
 		rotine->meals_num = ft_atoz(argv[5]);
-	return (1);
 }
 
-t_philo	*pre_init_pinfo(int ac, size_t philos_num, t_simulation *sim)
+void	init_sems(t_philo *pinfo)
 {
-	t_philo	*pinfo;
-	// int		t;
+	sem_unlink(SEM_F002);
+	sem_unlink(SEM_F001);
+	sem_unlink(SEM_F003);
+	sem_unlink(SEM_F004);
+	// if (sem_unlink(SEM_F002) == -1 || sem_unlink(SEM_F001) == -1
+	// 	|| sem_unlink(SEM_F003) == -1)
+	// {
+	// 	handle_error("sem_unlink");
+	// 	free(pinfo);
+	// 	exit(1);
+	// }
+	pinfo->sim->dead = sem_open(SEM_F002, O_CREAT | O_EXCL, 0666, 1);
+	if (pinfo->sim->dead == SEM_FAILED)
+	{
+		handle_error("sem_open");
+		free(pinfo);
+		exit(1);
+	}
+	pinfo->sim->eating = sem_open(SEM_F003, O_CREAT | O_EXCL, 0666, 1);
+	if (pinfo->sim->eating == SEM_FAILED)
+	{
+		handle_error("sem_open");
+		sem_close(pinfo->sim->dead);
+		sem_unlink(SEM_F002);
+		free(pinfo);
+		exit(1);
+	}
+	pinfo->sim->forks = sem_open(SEM_F001, O_CREAT | O_EXCL, 0666, pinfo->sim->philos_num);
+	if (pinfo->sim->forks == SEM_FAILED)
+	{
+		handle_error("sem_open");
+		sem_close(pinfo->sim->dead);
+		sem_unlink(SEM_F002);
+		sem_close(pinfo->sim->eating);
+		sem_unlink(SEM_F003);
+		free(pinfo);
+		exit(1);
+	}
+}
+
+t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim)
+{
+	// t_philo	*pinfo;
+	size_t	i;
 
 	pinfo = malloc(sizeof(*pinfo) * philos_num);
 	if (!pinfo)
 	{
 		handle_error("malloc");
-		return (NULL);
+		exit(1);
 	}
 	memset(pinfo, 0, sizeof(*pinfo) * philos_num);
-	// t = pthread_mutex_init(&sim->dead_check, NULL);
-	// if (t)
-	// {
-	// 	handle_errorEN(t, "pthread_mutex_init");
-	// 	free(pinfo);
-	// 	return (NULL);
-	// }
 	sim->state = ALL_ALIVE;
 	sim->one_philo = 0;
 	if (philos_num == 1)
@@ -55,39 +89,11 @@ t_philo	*pre_init_pinfo(int ac, size_t philos_num, t_simulation *sim)
 	sim->is_meals_limited = 0;
 	if (ac == 6)
 		sim->is_meals_limited = 1;
-	return (pinfo);
-}
-
-// void	set_rfork(t_philo *pinfo, int i, size_t philos_num)
-// {
-// 	if (i == 0)
-// 		pinfo[i].forks.rfork = &pinfo[philos_num - 1].forks.lfork;
-// 	else
-// 		pinfo[i].forks.rfork = &pinfo[i - 1].forks.lfork;
-// }
-
-t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim)
-{
-	size_t	i;
-
-	pinfo = pre_init_pinfo(ac, philos_num, sim);
-	if (!pinfo)
-		return (NULL);
 	i = 0;
 	while (i < philos_num)
 	{
 		pinfo[i].num = i + 1;
 		pinfo[i].sim = sim;
-		// if (pthread_mutex_init(&pinfo[i].forks.lfork, NULL) 
-		// 	|| pthread_mutex_init(&pinfo[i].eating_check, NULL))
-		// {
-		// 	handle_error("pthread_mutex_init");
-		// 	if (pthread_mutex_destroy(&sim->dead_check))
-		// 		handle_error("pthread_mutex_destroy");
-		// 	free(pinfo);
-		// 	return (NULL);
-		// }
-		// set_rfork(pinfo, i, philos_num);
 		i++;
 	}
 	return (pinfo);
@@ -96,34 +102,32 @@ t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim
 int	start_philos(t_philo *pinfo, size_t philos_num, t_simulation *sim)
 {
 	size_t	i;
-	// size_t	j;
+	size_t	j;
 
 	i = 0;
 	sim->start = get_time();
 	while (i < philos_num)
 	{
-		pinfo[i].last_meal = get_time();
+		// sem_wait(pinfo->sim->eating);
 		pinfo[i].id = fork();
-		if (pinfo[i].id == 0)
+		if (pinfo[i].id == -1)
+		{
+			handle_error("fork");
+			j = 0;
+			while (j < i)
+				kill(pinfo[j++].id, 2);
+			sem_close(pinfo->sim->dead);
+			sem_unlink(SEM_F002);
+			sem_close(pinfo->sim->eating);
+			sem_unlink(SEM_F003);
+			sem_close(pinfo->sim->forks);
+			sem_unlink(SEM_F001);
+			free(pinfo);
+			exit(1);
+		}
+		else if (pinfo[i].id == 0)
 			philo_rotine(&pinfo[i]);
-		// j = pthread_create(&pinfo[i].id, NULL, philo_rotine, &pinfo[i]);
-		// if (j)
-		// {
-		// 	handle_errorEN(j, "pthread_create");
-		// 	pthread_mutex_lock(&pinfo->sim->dead_check);
-		// 	sim->state = SMO_DEAD;
-		// 	pthread_mutex_unlock(&pinfo->sim->dead_check);
-		// 	j = 0;
-		// 	while (j < i)
-		// 		pthread_join(pinfo[j++].id, NULL);
-		// 	j = 0;
-		// 	while (j < i)
-		// 	{
-		// 		pthread_mutex_destroy(&pinfo[j].forks.lfork);
-		// 		pthread_mutex_destroy(&pinfo[j++].eating_check);
-		// 	}
-		// 	return (1);
-		// }
+		// usleep(1000);
 		i++;
 	}
 	return (0);

@@ -19,45 +19,21 @@ void	*is_dead(void *args)
 	pinfo = args;
 	while (1)
 	{
+		sem_wait(pinfo->sim->eating);
+		if (pinfo->done_eating)
+		{
+			sem_post(pinfo->sim->eating);
+			return (NULL);
+		}
 		if (!pinfo->done_eating && !pinfo->eating && get_time() - pinfo->last_meal >= pinfo->sim->rotine.tdie)
 		{
-			// pinfo->done_eating == 0
 			sem_wait(pinfo->sim->dead);
 			printf("◦ %zu %zu died\n", get_ct(pinfo->sim->start), pinfo->num);
+			if (pinfo->sim->rotine.tdie == 0)
+				ft_msleep(1);
 			exit(1);
-			// if (pinfo->sim->one_philo)
-				// pthread_mutex_unlock(&pinfo->forks.lfork);
 		}
-		else if (pinfo->done_eating)
-			return (NULL);
+		sem_post(pinfo->sim->eating);
 	}
 	return (NULL);
 }
-
-// char	creat_monitor(pthread_t *monitor_id, void *args)
-// {
-// 	int		t;
-// 	size_t	j;
-// 	t_philo	*pinfo;
-
-// 	pinfo = (t_philo *)args;
-// 	t = pthread_create(monitor_id, NULL, monitor, args);
-// 	if (t)
-// 	{
-// 		handle_errorEN(t, "pthread_create");
-// 		pthread_mutex_lock(&pinfo->sim->dead_check);
-// 		pinfo->sim->state = SMO_DEAD;
-// 		pthread_mutex_unlock(&pinfo->sim->dead_check);
-// 		j = 0;
-// 		while (j < pinfo->sim->philos_num)
-// 			pthread_join(pinfo[j++].id, NULL);
-// 		j = 0;
-// 		while (j < pinfo->sim->philos_num)
-// 		{
-// 			pthread_mutex_destroy(&pinfo[j].forks.lfork);
-// 			pthread_mutex_destroy(&pinfo[j++].eating_check);
-// 		}
-// 		return (1);
-// 	}
-// 	return (0);
-// }
