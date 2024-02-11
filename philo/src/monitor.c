@@ -36,7 +36,8 @@ void	*monitor(void *args)
 	while (1)
 	{
 		pthread_mutex_lock(&pinfo[i].eating_check);
-		if (!pinfo[i].eating && get_time() - pinfo[i].last_meal >= pinfo[i].sim->rotine.tdie)
+		if (!pinfo[i].eating
+			&& get_ct(pinfo[i].last_meal) >= pinfo[i].sim->rotine.tdie)
 		{
 			_dead(&pinfo[i]);
 			return (NULL);
@@ -59,7 +60,7 @@ char	creat_monitor(pthread_t *monitor_id, void *args)
 	t = pthread_create(monitor_id, NULL, monitor, args);
 	if (t)
 	{
-		handle_errorEN(t, "pthread_create");
+		handle_erroren(t, "pthread_create");
 		pthread_mutex_lock(&pinfo->sim->dead_check);
 		pinfo->sim->state = SMO_DEAD;
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
@@ -75,4 +76,9 @@ char	creat_monitor(pthread_t *monitor_id, void *args)
 		return (1);
 	}
 	return (0);
+}
+
+size_t	get_ct(size_t start)
+{
+	return (get_time() - start);
 }

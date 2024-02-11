@@ -12,33 +12,38 @@
 
 #include "../include/philo.h"
 
-void	*take_forks(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork)
+void	*take_forks(t_philo *pinfo, pthread_mutex_t *first_fork,
+		pthread_mutex_t *second_fork)
 {
 	pthread_mutex_lock(first_fork);
 	pthread_mutex_lock(&pinfo->sim->dead_check);
-	if (pinfo->sim->state == SMO_DEAD || !pinfo->sim->rotine.tdie || pinfo->done_eating)
+	if (pinfo->sim->state == SMO_DEAD
+		|| !pinfo->sim->rotine.tdie || pinfo->done_eating)
 	{
 		pthread_mutex_unlock(first_fork);
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
 		return (NULL);
 	}
-	printf("◦ %zu %zu has taken a fork\n", get_ct(pinfo->sim->start), pinfo->num);
+	printf("◦ %zu %zu has taken a fork\n",
+		get_ct(pinfo->sim->start), pinfo->num);
 	pthread_mutex_unlock(&pinfo->sim->dead_check);
 	pthread_mutex_lock(second_fork);
 	pthread_mutex_lock(&pinfo->sim->dead_check);
-	if (pinfo->sim->state == SMO_DEAD || !pinfo->sim->rotine.tdie || pinfo->done_eating)
+	if (pinfo->sim->state == SMO_DEAD
+		|| !pinfo->sim->rotine.tdie || pinfo->done_eating)
 	{
-		pthread_mutex_unlock(first_fork);
-		pthread_mutex_unlock(second_fork);
+		unlock_forks(first_fork, second_fork);
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
 		return (NULL);
 	}
-	printf("◦ %zu %zu has taken a fork\n", get_time() - pinfo->sim->start, pinfo->num);
+	printf("◦ %zu %zu has taken a fork\n",
+		get_ct(pinfo->sim->start), pinfo->num);
 	pthread_mutex_unlock(&pinfo->sim->dead_check);
 	return ((void *)1);
 }
 
-int	is_dead(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork)
+int	is_dead(t_philo *pinfo, pthread_mutex_t *first_fork,
+	pthread_mutex_t *second_fork)
 {
 	pthread_mutex_lock(&pinfo->sim->dead_check);
 	if (pinfo->sim->state == SMO_DEAD || !pinfo->sim->rotine.tdie)
@@ -54,17 +59,20 @@ int	is_dead(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second
 	return (0);
 }
 
-void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork)
+void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork,
+		pthread_mutex_t *second_fork)
 {
 	if (!take_forks(pinfo, first_fork, second_fork))
 		return (NULL);
 	if (pinfo->sim->rotine.teat > 0 && (pinfo->sim->is_meals_limited == 0
-		|| (pinfo->sim->is_meals_limited && pinfo->sim->rotine.meals_num)))
+			|| (pinfo->sim->is_meals_limited
+				&& pinfo->sim->rotine.meals_num)))
 	{
 		pthread_mutex_lock(&pinfo->eating_check);
 		pinfo->eating = 1;
 		pinfo->eaten_meals++;
-		if(pinfo->sim->is_meals_limited && pinfo->eaten_meals == pinfo->sim->rotine.meals_num)
+		if (pinfo->sim->is_meals_limited
+			&& pinfo->eaten_meals == pinfo->sim->rotine.meals_num)
 			pinfo->done_eating = 1;
 		if (is_dead(pinfo, first_fork, second_fork))
 			return (NULL);
@@ -90,7 +98,8 @@ void	*sleeping(t_philo *pinfo)
 			pthread_mutex_unlock(&pinfo->sim->dead_check);
 			return (NULL);
 		}
-		printf("◦ %zu %zu is sleeping\n", get_ct(pinfo->sim->start), pinfo->num);
+		printf("◦ %zu %zu is sleeping\n",
+			get_ct(pinfo->sim->start), pinfo->num);
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
 		ft_msleep(pinfo->sim->rotine.tslp);
 	}

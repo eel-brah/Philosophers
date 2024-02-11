@@ -28,18 +28,8 @@ void	init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine)
 		rotine->meals_num = ft_atoz(argv[5]);
 }
 
-void	init_sems(t_philo *pinfo)
+void	init_sems_2(t_philo *pinfo)
 {
-	sem_unlink(SEM_F002);
-	sem_unlink(SEM_F001);
-	sem_unlink(SEM_F003);
-	pinfo->sim->dead = sem_open(SEM_F002, O_CREAT | O_EXCL, 0666, 1);
-	if (pinfo->sim->dead == SEM_FAILED)
-	{
-		handle_error("sem_open");
-		free(pinfo);
-		exit(1);
-	}
 	pinfo->sim->eating = sem_open(SEM_F003, O_CREAT | O_EXCL, 0666, 1);
 	if (pinfo->sim->eating == SEM_FAILED)
 	{
@@ -49,7 +39,8 @@ void	init_sems(t_philo *pinfo)
 		free(pinfo);
 		exit(1);
 	}
-	pinfo->sim->forks = sem_open(SEM_F001, O_CREAT | O_EXCL, 0666, pinfo->sim->philos_num);
+	pinfo->sim->forks = sem_open(SEM_F001, O_CREAT | O_EXCL,
+			0666, pinfo->sim->philos_num);
 	if (pinfo->sim->forks == SEM_FAILED)
 	{
 		handle_error("sem_open");
@@ -62,7 +53,23 @@ void	init_sems(t_philo *pinfo)
 	}
 }
 
-t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim)
+void	init_sems(t_philo *pinfo)
+{
+	sem_unlink(SEM_F002);
+	sem_unlink(SEM_F001);
+	sem_unlink(SEM_F003);
+	pinfo->sim->dead = sem_open(SEM_F002, O_CREAT | O_EXCL, 0666, 1);
+	if (pinfo->sim->dead == SEM_FAILED)
+	{
+		handle_error("sem_open");
+		free(pinfo);
+		exit(1);
+	}
+	init_sems_2(pinfo);
+}
+
+t_philo	*init_pinfo(int ac, t_philo *pinfo,
+			size_t philos_num, t_simulation *sim)
 {
 	size_t	i;
 
@@ -88,38 +95,4 @@ t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim
 		i++;
 	}
 	return (pinfo);
-}
-
-int	start_philos(t_philo *pinfo, size_t philos_num, t_simulation *sim)
-{
-	size_t	i;
-	size_t	j;
-
-	i = 0;
-	sim->start = get_time();
-	while (i < philos_num)
-	{
-		// sem_wait(pinfo->sim->eating);
-		pinfo[i].id = fork();
-		if (pinfo[i].id == -1)
-		{
-			handle_error("fork");
-			j = 0;
-			while (j < i)
-				kill(pinfo[j++].id, 2);
-			sem_close(pinfo->sim->dead);
-			sem_unlink(SEM_F002);
-			sem_close(pinfo->sim->eating);
-			sem_unlink(SEM_F003);
-			sem_close(pinfo->sim->forks);
-			sem_unlink(SEM_F001);
-			free(pinfo);
-			exit(1);
-		}
-		else if (pinfo[i].id == 0)
-			philo_rotine(&pinfo[i]);
-		// usleep(1000);
-		i++;
-	}
-	return (0);
 }

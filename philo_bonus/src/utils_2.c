@@ -19,7 +19,7 @@ void	handle_error(char *str)
 	ft_putstr_fd("\n", 2);
 }
 
-void	handle_errorEN(int s, char *str)
+void	handle_erroren(int s, char *str)
 {
 	ft_putstr_fd("Error ", 2);
 	ft_putnbr_fd(s, 2);
@@ -35,11 +35,6 @@ size_t	get_time(void)
 	if (gettimeofday(&time, NULL))
 		handle_error("gettimeofday");
 	return (time.tv_sec * (size_t)1000 + time.tv_usec / (size_t)1000);
-}
-
-size_t	get_ct(size_t start)
-{
-	return (get_time() - start);
 }
 
 int	ft_isspace(char c)

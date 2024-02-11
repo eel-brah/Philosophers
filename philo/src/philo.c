@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 15:40:28 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/11 20:52:38 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,8 @@ void	*philo_rotine(void *args)
 	pinfo = (t_philo *)args;
 	if (pinfo->num % 2 == 0)
 	{
-		printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->start), pinfo->num);
+		printf("◦ %zu %zu is thinking\n",
+			get_ct(pinfo->sim->start), pinfo->num);
 		ft_msleep(pinfo->sim->rotine.teat / 2);
 	}
 	set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
@@ -86,13 +87,13 @@ void	exting(t_philo *pinfo, size_t philos_num)
 	{
 		t = pthread_join(pinfo[i].id, NULL);
 		if (t)
-			handle_errorEN(t, "pthread_join");
+			handle_erroren(t, "pthread_join");
 		i++;
 	}
 	i = 0;
 	while (i < philos_num)
 	{
-		if (pthread_mutex_destroy(&pinfo[i].forks.lfork) 
+		if (pthread_mutex_destroy(&pinfo[i].forks.lfork)
 			|| pthread_mutex_destroy(&pinfo[i].eating_check))
 			handle_error("pthread_mutex_destroy");
 		i++;

@@ -9,7 +9,7 @@ BUILD_DIR := $(PARN_DIR)/build
 INCLUDE := philo.h
 INCLUDE := $(addprefix $(INCLUDE_DIR)/,$(INCLUDE))
 
-SRC := philo.c acts.c monitor.c init.c utils_1.c utils_2.c print.c
+SRC := philo.c acts.c monitor.c init.c utils_1.c utils_2.c print.c start.c
 OBJ := $(SRC:%.c=$(BUILD_DIR)/%.o)
 
 NAME := philo

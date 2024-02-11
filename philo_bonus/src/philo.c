@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 18:52:38 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/11 20:48:03 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,11 @@ void	philo_rotine(void *args)
 
 	pinfo = (t_philo *)args;
 	pinfo->last_meal = get_time();
-	if (pinfo->sim->rotine.teat < pinfo->sim->rotine.tdie && pinfo->num % 2 == 0)
+	if (pinfo->sim->rotine.teat < pinfo->sim->rotine.tdie
+		&& pinfo->num % 2 == 0)
 	{
-		printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->start), pinfo->num);
+		printf("◦ %zu %zu is thinking\n",
+			get_ct(pinfo->sim->start), pinfo->num);
 		ft_msleep(pinfo->sim->rotine.teat / 2);
 	}
 	pthread_create(&monitor_id, NULL, is_dead, pinfo);

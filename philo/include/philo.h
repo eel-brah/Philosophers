@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:42 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 15:40:28 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/11 21:10:42 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,10 @@
 # include <string.h>
 
 typedef enum e_state
-{ 
+{
 	ALL_ALIVE,
 	SMO_DEAD,
-} t_state;
+}	t_state;
 
 typedef struct s_rotine
 {
@@ -71,19 +71,25 @@ int		is_all_digits(char *s);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
 void	ft_putnbr_fd(int n, int fd);
 void	*monitor(void *args);
-void	*take_forks(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork);
-void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork, pthread_mutex_t *second_fork);
+void	*take_forks(t_philo *pinfo, pthread_mutex_t *first_fork,
+			pthread_mutex_t *second_fork);
+void	*eating(t_philo *pinfo, pthread_mutex_t *first_fork,
+			pthread_mutex_t *second_fork);
 void	*sleeping(t_philo *pinfo);
 void	*thinking(t_philo *pinfo);
 char	creat_monitor(pthread_t *monitor_id, void *args);
 int		start_philos(t_philo *pinfo, size_t philos_num, t_simulation *sim);
-t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim);
-int		init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine);
+t_philo	*init_pinfo(int ac, t_philo *pinfo,
+			size_t philos_num, t_simulation *sim);
+int		init_rotine(char **argv, int argc,
+			size_t *philos_num, t_rotine *rotine);
 void	handle_error(char *str);
-void	handle_errorEN(int s, char *str);
+void	handle_erroren(int s, char *str);
 size_t	get_time(void);
 size_t	get_ct(size_t start);
 void	*philo_rotine(void *args);
 int		ft_isspace(char c);
 void	ft_msleep(size_t milliseconds);
+void	unlock_forks(pthread_mutex_t *first_fork,
+			pthread_mutex_t *second_fork);
 #endif

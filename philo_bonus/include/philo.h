@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:42 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 19:56:15 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/11 20:49:21 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,17 +26,16 @@
 # include <semaphore.h>
 # include <signal.h>
 
-#define SEM_F001 "/sem_f001"
-#define SEM_F002 "/sem_f002"
-#define SEM_F003 "/sem_f003"
-#define SEM_F004 "/sem_f004"
-
+# define SEM_F001 "/sem_f001"
+# define SEM_F002 "/sem_f002"
+# define SEM_F003 "/sem_f003"
+# define SEM_F004 "/sem_f004"
 
 typedef enum e_state
-{ 
+{
 	ALL_ALIVE,
 	SMO_DEAD,
-} t_state;
+}	t_state;
 
 typedef struct s_rotine
 {
@@ -83,10 +82,12 @@ void	sleeping(t_philo *pinfo);
 void	thinking(t_philo *pinfo);
 char	creat_monitor(pthread_t *monitor_id, void *args);
 int		start_philos(t_philo *pinfo, size_t philos_num, t_simulation *sim);
-t_philo	*init_pinfo(int ac, t_philo *pinfo, size_t philos_num, t_simulation *sim);
-void	init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine);
+t_philo	*init_pinfo(int ac, t_philo *pinfo,
+			size_t philos_num, t_simulation *sim);
+void	init_rotine(char **argv, int argc,
+			size_t *philos_num, t_rotine *rotine);
 void	handle_error(char *str);
-void	handle_errorEN(int s, char *str);
+void	handle_erroren(int s, char *str);
 size_t	get_time(void);
 size_t	get_ct(size_t start);
 void	philo_rotine(void *args);
