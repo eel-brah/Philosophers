@@ -39,6 +39,20 @@ int	check_args(int ac, char **av)
 	return (1);
 }
 
+void	set_forks(t_philo *pinfo, void **first_fork, void **second_fork)
+{
+	if (pinfo->num % 2 == 1)
+	{
+		*first_fork = &pinfo->forks.lfork;
+		*second_fork = pinfo->forks.rfork;
+	}
+	else
+	{
+		*first_fork = pinfo->forks.rfork;
+		*second_fork = &pinfo->forks.lfork;
+	}
+}
+
 void	*philo_rotine(void *args)
 {
 	t_philo			*pinfo;
@@ -48,8 +62,7 @@ void	*philo_rotine(void *args)
 	pinfo = (t_philo *)args;
 	if (pinfo->num % 2 == 0)
 		ft_msleep(pinfo->sim->rotine.teat);
-	first_fork = pinfo->forks.rfork;
-	second_fork = &pinfo->forks.lfork;
+	set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
 	while (1)
 	{
 		if (!eating(pinfo, first_fork, second_fork))

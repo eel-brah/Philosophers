@@ -24,14 +24,13 @@ int	init_rotine(char **argv, int argc, size_t *philos_num, t_rotine *rotine)
 	rotine->teat = ft_atoz(argv[3]);
 	rotine->tslp = ft_atoz(argv[4]);
 	rotine->meals_num = 0;
-	if (argc == 6)
-		rotine->meals_num = ft_atoz(argv[5]);
-	if ((argc == 6 && rotine->meals_num == 0)
-		|| rotine->tslp == 0 || rotine->teat == 0)
+	if (rotine->tslp == 0 || rotine->teat == 0)
 	{
 		printf("Invalid argiments\nFor help: %s --help\n", *argv);
 		return (0);
 	}
+	if (argc == 6)
+		rotine->meals_num = ft_atoz(argv[5]);
 	return (1);
 }
 
