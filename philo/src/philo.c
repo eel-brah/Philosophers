@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:22 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 20:52:38 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/12 18:03:05 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,20 +39,6 @@ int	check_args(int ac, char **av)
 	return (1);
 }
 
-void	set_forks(t_philo *pinfo, void **first_fork, void **second_fork)
-{
-	if (pinfo->num % 2 == 1)
-	{
-		*first_fork = &pinfo->forks.lfork;
-		*second_fork = pinfo->forks.rfork;
-	}
-	else
-	{
-		*first_fork = pinfo->forks.rfork;
-		*second_fork = &pinfo->forks.lfork;
-	}
-}
-
 void	*philo_rotine(void *args)
 {
 	t_philo			*pinfo;
@@ -68,7 +54,8 @@ void	*philo_rotine(void *args)
 		pthread_mutex_unlock(&pinfo->sim->dead_check);
 		ft_msleep(pinfo->sim->rotine.teat / 2);
 	}
-	set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);
+	first_fork = pinfo->forks.rfork;
+	second_fork = &pinfo->forks.lfork;
 	while (1)
 	{
 		if (!eating(pinfo, first_fork, second_fork))

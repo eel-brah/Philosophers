@@ -116,7 +116,5 @@ void	*thinking(t_philo *pinfo)
 	}
 	printf("◦ %zu %zu is thinking\n", get_ct(pinfo->sim->start), pinfo->num);
 	pthread_mutex_unlock(&pinfo->sim->dead_check);
-	if (pinfo->sim->philos_num % 2 == 1 && pinfo->num % 2 == 1)
-		ft_msleep(pinfo->sim->rotine.teat / 4);
 	return ((void *)1);
 }
