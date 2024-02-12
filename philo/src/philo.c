@@ -62,8 +62,10 @@ void	*philo_rotine(void *args)
 	pinfo = (t_philo *)args;
 	if (pinfo->num % 2 == 0)
 	{
+		pthread_mutex_lock(&pinfo->sim->dead_check);
 		printf("◦ %zu %zu is thinking\n",
 			get_ct(pinfo->sim->start), pinfo->num);
+		pthread_mutex_unlock(&pinfo->sim->dead_check);
 		ft_msleep(pinfo->sim->rotine.teat / 2);
 	}
 	set_forks(pinfo, (void **)&first_fork, (void **)&second_fork);

@@ -1,5 +1,5 @@
 CC := cc
-CFLAGS := -Wall -Wextra -Werror
+CFLAGS := -Wall -Wextra -Werror -pthread
 
 PARN_DIR := .
 SRC_DIR := $(PARN_DIR)/src

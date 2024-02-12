@@ -19,10 +19,9 @@
 # include <pthread.h>
 # include <sys/time.h>
 # include <string.h>
-
+# include <sys/wait.h>
 # include <fcntl.h>
 # include <limits.h>
-# include <sys/time.h>
 # include <semaphore.h>
 # include <signal.h>
 
