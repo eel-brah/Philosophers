@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/11 21:00:18 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 21:00:30 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/13 20:29:39 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,4 +50,11 @@ int	start_philos(t_philo *pinfo, size_t philos_num, t_simulation *sim)
 		i++;
 	}
 	return (0);
+}
+
+void	*pr_malloc(size_t size, size_t type_size)
+{
+	if (size && SIZE_MAX / size < type_size)
+		return (NULL);
+	return (malloc(type_size * size));
 }

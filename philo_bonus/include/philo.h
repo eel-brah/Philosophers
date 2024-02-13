@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:42 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 20:49:21 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/13 20:54:59 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,7 @@ typedef struct s_philo
 	char			done_eating;
 }	t_philo;
 
+void	*pr_malloc(size_t size, size_t type_size);
 size_t	ft_atoz(const char *str);
 size_t	ft_strlen(const char *s);
 void	ft_putstr_fd(char *s, int fd);

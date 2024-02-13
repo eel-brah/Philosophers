@@ -73,7 +73,7 @@ t_philo	*init_pinfo(int ac, t_philo *pinfo,
 {
 	size_t	i;
 
-	pinfo = malloc(sizeof(*pinfo) * philos_num);
+	pinfo = pr_malloc(sizeof(*pinfo), philos_num);
 	if (!pinfo)
 	{
 		handle_error("malloc");

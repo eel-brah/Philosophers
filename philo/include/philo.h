@@ -6,7 +6,7 @@
 /*   By: eel-brah <eel-brah@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/03 03:52:42 by eel-brah          #+#    #+#             */
-/*   Updated: 2024/02/11 21:10:42 by eel-brah         ###   ########.fr       */
+/*   Updated: 2024/02/13 20:30:28 by eel-brah         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,4 +92,5 @@ int		ft_isspace(char c);
 void	ft_msleep(size_t milliseconds);
 void	unlock_forks(pthread_mutex_t *first_fork,
 			pthread_mutex_t *second_fork);
+void	*pr_malloc(size_t size, size_t type_size);
 #endif
